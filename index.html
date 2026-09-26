@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f4e78">
+<title>Quản lý Barcode Mobile</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#f4f6f8;color:#17202a}
+header{background:#1f4e78;color:white;padding:18px 16px;position:sticky;top:0;z-index:5}h1{font-size:21px;margin:0 0 4px}.sub{font-size:13px;opacity:.85}
+main{padding:12px;max-width:700px;margin:auto}.card{background:#fff;border-radius:16px;padding:15px;margin-bottom:12px;box-shadow:0 2px 10px #0001}
+label{display:block;font-weight:700;font-size:13px;margin:11px 0 6px}
+input,textarea,button{width:100%;font:inherit;border-radius:11px;border:1px solid #cbd5df;padding:12px;background:#fff}
+button{border:0;font-weight:700;padding:13px;cursor:pointer}.primary{background:#1f4e78;color:#fff}.green{background:#70ad47;color:#fff}.orange{background:#f4b183}.gray{background:#e7edf2}
+.row,.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#reader{width:100%;max-height:48vh;object-fit:cover;border-radius:13px;background:#000;margin-top:10px}
+.status{padding:10px;border-radius:10px;background:#eef4f8;font-size:13px;margin-top:10px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#eef4f8;border-radius:12px;padding:10px;text-align:center}.stat b{display:block;font-size:20px}
+.item{border:1px solid #e0e5e9;border-radius:12px;padding:11px;margin-top:8px}.item strong{display:block}.muted{font-size:12px;color:#68737d}
+.badge{display:inline-block;padding:4px 7px;border-radius:8px;font-size:11px;font-weight:700}.ok{background:#e2f0d9;color:#315c22}.soon{background:#fce4d6;color:#8a3d16}.expired{background:#f4cccc;color:#8a1c1c}
+.small{font-size:12px}.hidden{display:none!important}
+@media(max-width:430px){main{padding:10px}.row{grid-template-columns:1fr}}
+</style>
+<!-- Thư viện quét mã ZXing -->
+<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
+</head>
+<body>
+<header><h1>📦 Quản lý Barcode</h1><div class="sub">Camera • Barcode • Số lượng • Date/HSD • Ảnh</div></header>
+<main>
+<section class="card">
+<div class="stats"><div class="stat"><b id="totalRows">0</b><span class="small">Dòng</span></div><div class="stat"><b id="totalQty">0</b><span class="small">Số lượng</span></div><div class="stat"><b id="expired">0</b><span class="small">Hết hạn</span></div></div>
+</section>
+
+<section class="card">
+<button class="primary" id="scanBtn">📷 Bắt đầu quét Barcode</button>
+<!-- Thẻ video cấu hình chuẩn cho Safari iOS với playsinline và webkit-playsinline -->
+<video id="reader" class="hidden" autoplay playsinline webkit-playsinline muted></video>
+<div class="actions" style="margin-top:10px">
+<button class="gray hidden" id="stopBtn">⏹ Dừng quét</button>
+<button class="gray" id="manualBtn">⌨️ Nhập thủ công</button>
+</div>
+<div class="status" id="scanStatus">Sẵn sàng quét. Hãy nhấn nút để mở camera.</div>
+</section>
+
+<section class="card">
+<label>Barcode *</label>
+<input id="barcode" inputmode="numeric" autocomplete="off" placeholder="Barcode sẽ tự điền sau khi quét">
+<label>Tên sản phẩm</label>
+<input id="name" placeholder="Tên sản phẩm">
+<div class="row">
+<div><label>Số lượng *</label><input id="qty" type="number" inputmode="numeric" min="1" value="1"></div>
+<div><label>Hạn sử dụng / Date *</label><input id="expiry" type="date"></div>
+</div>
+<label>Ngày sản xuất</label><input id="mfg" type="date">
+<label>Ảnh sản phẩm</label><input id="photoInput" type="file" accept="image/*" capture="environment">
+<img id="photo" class="hidden" style="width:100%;max-height:280px;object-fit:contain;border-radius:10px;margin-top:8px">
+<label>Ghi chú</label><textarea id="note" rows="2" placeholder="Ghi chú"></textarea>
+<div class="actions" style="margin-top:12px"><button class="green" id="saveBtn">💾 Lưu</button><button class="orange" id="clearBtn">🧹 Xóa</button></div>
+</section>
+
+<section class="card">
+<label>Tìm kiếm</label><input id="search" placeholder="Barcode hoặc tên sản phẩm">
+<div id="list"></div>
+<div class="actions" style="margin-top:12px"><button class="primary" id="csvBtn">📊 Xuất CSV</button><button class="gray" id="jsonBtn">💾 Sao lưu</button></div>
+<input id="restoreInput" type="file" accept=".json" class="hidden"><button class="gray" id="restoreBtn" style="margin-top:8px">♻️ Khôi phục</button>
+</section>
+</main>
+
+<script>
+const KEY = "barcode_inventory_v2";
+let records = JSON.parse(localStorage.getItem(KEY) || "[]");
+let codeReader = null, mediaStream = null, photoData = "";
+const $ = id => document.getElementById(id);
+
+function store(){ localStorage.setItem(KEY, JSON.stringify(records)); render(); }
+function esc(v){ return String(v ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+
+function stat(r){
+  if(!r.expiry) return ["CÒN HẠN", "ok"];
+  let d = new Date(r.expiry + "T23:59:59"), days = Math.ceil((d - new Date()) / 86400000);
+  if(days < 0) return ["ĐÃ HẾT HẠN", "expired"];
+  if(days <= 7) return ["SẮP HẾT HẠN", "soon"];
+  return ["CÒN HẠN", "ok"];
+}
+
+function render(){
+  $("totalRows").textContent = records.length;
+  $("totalQty").textContent = records.reduce((a, r) => a + Number(r.qty || 0), 0);
+  $("expired").textContent = records.filter(r => stat(r)[0] == "ĐÃ HẾT HẠN").length;
+  let q = $("search").value.toLowerCase(), arr = records.filter(r => (r.barcode + " " + r.name).toLowerCase().includes(q)).slice().reverse();
+  $("list").innerHTML = arr.length ? arr.map(r => {
+    let i = records.indexOf(r), s = stat(r);
+    return `<div class="item"><strong>${esc(r.name || "Chưa đặt tên")}</strong><div class="muted">Barcode: ${esc(r.barcode)} · SL: ${esc(r.qty)} · Date: ${esc(r.expiry || "-")}</div><span class="badge ${s[1]}">${s[0]}</span>${r.photo ? `<br><img src="${r.photo}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin-top:7px">` : ""}<div class="actions" style="margin-top:7px"><button class="gray" onclick="editR(${i})">Sửa</button><button class="gray" onclick="delR(${i})">Xóa</button></div></div>`;
+  }).join("") : "<div class='muted'>Chưa có dữ liệu.</div>";
+}
+
+function clearForm(){
+  ["barcode", "name", "mfg", "expiry", "note"].forEach(x => $(x).value = "");
+  $("qty").value = 1; photoData = ""; $("photo").src = ""; $("photo").classList.add("hidden");
+  $("scanStatus").textContent = "Sẵn sàng quét.";
+}
+
+function editR(i){
+  let r = records[i];
+  $("barcode").value = r.barcode; $("name").value = r.name; $("qty").value = r.qty;
+  $("mfg").value = r.mfg; $("expiry").value = r.expiry; $("note").value = r.note;
+  photoData = r.photo || "";
+  if(photoData){ $("photo").src = photoData; $("photo").classList.remove("hidden"); }
+  records.splice(i, 1); store(); scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function delR(i){ if(confirm("Xóa bản ghi này?")){ records.splice(i, 1); store(); } }
+
+// Hàm mở camera tương thích hoàn toàn Safari iOS
+async function startScan(){
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert("Trình duyệt Safari này không hỗ trợ truy cập camera trực tiếp. Hãy đảm bảo chạy qua https://.");
+    return;
+  }
+  
+  stopScan();
+  const videoElem = $("reader");
+  videoElem.classList.remove("hidden");
+  $("stopBtn").classList.remove("hidden");
+  $("scanBtn").disabled = true;
+  $("scanStatus").textContent = "Đang xin quyền Safari...";
+
+  try {
+    // 1. Kích hoạt camera sau qua MediaStream chuẩn
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      },
+      audio: false
+    });
+
+    mediaStream = stream;
+    videoElem.srcObject = stream;
+    
+    // Đảm bảo Safari không chặn phát video
+    await videoElem.play();
+    $("scanStatus").textContent = "Đưa mã barcode vào giữa khung camera...";
+
+    // 2. Chuyển video stream sang ZXing để đọc mã
+    if (window.ZXingBrowser) {
+      codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+      codeReader.decodeFromStream(stream, videoElem, (result, err) => {
+        if(result){
+          let code = result.getText();
+          $("barcode").value = code;
+          $("scanStatus").textContent = "✅ Đã quét thành công: " + code;
+          navigator.vibrate?.(150);
+          stopScan();
+        }
+      });
+    }
+  } catch (err) {
+    console.error("Safari camera error:", err);
+    stopScan();
+    if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+      alert("Safari đang chặn Camera.\n\nCách mở lại trên iPhone:\n1. Bấm vào nút 'aA' trên thanh địa chỉ Safari\n2. Chọn 'Cài đặt trang web' (Website Settings)\n3. Đổi mục Camera sang 'Cho phép' (Allow) rồi tải lại trang.");
+    } else {
+      alert("Không thể khởi động camera: " + (err.message || err.name));
+    }
+  }
+}
+
+function stopScan(){
+  try {
+    if(codeReader){
+      codeReader.reset();
+      codeReader = null;
+    }
+    if(mediaStream){
+      mediaStream.getTracks().forEach(t => t.stop());
+      mediaStream = null;
+    }
+    const videoElem = $("reader");
+    videoElem.srcObject = null;
+  } catch(e){}
+
+  $("reader").classList.add("hidden");
+  $("stopBtn").classList.add("hidden");
+  $("scanBtn").disabled = false;
+}
+
+$("scanBtn").onclick = startScan;
+$("stopBtn").onclick = stopScan;
+$("manualBtn").onclick = () => { $("barcode").focus(); stopScan(); };
+
+$("photoInput").onchange = e => {
+  let f = e.target.files[0]; if(!f) return;
+  let r = new FileReader();
+  r.onload = () => { photoData = r.result; $("photo").src = photoData; $("photo").classList.remove("hidden"); };
+  r.readAsDataURL(f);
+};
+
+$("saveBtn").onclick = () => {
+  let barcode = $("barcode").value.trim(), qty = Number($("qty").value), expiry = $("expiry").value;
+  if(!barcode) return alert("Vui lòng quét hoặc nhập barcode.");
+  if(qty < 1) return alert("Số lượng phải từ 1 trở lên.");
+  if(!expiry) return alert("Vui lòng nhập Date/HSD.");
+  records.push({
+    barcode, name: $("name").value.trim(), qty, mfg: $("mfg").value, expiry,
+    photo: photoData, note: $("note").value.trim(), createdAt: new Date().toISOString()
+  });
+  store(); clearForm(); alert("Đã lưu dữ liệu.");
+};
+
+$("clearBtn").onclick = clearForm;
+$("search").oninput = render;
+
+function download(b, n){
+  let a = document.createElement("a");
+  a.href = URL.createObjectURL(b); a.download = n; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+$("csvBtn").onclick = () => {
+  let h = ["Barcode", "Tên sản phẩm", "Số lượng", "Ngày sản xuất", "Hạn sử dụng", "Ghi chú", "Thời gian"];
+  let rows = records.map(r => [r.barcode, r.name, r.qty, r.mfg, r.expiry, r.note, r.createdAt]);
+  let c = "\uFEFF" + [h, ...rows].map(a => a.map(v => `"${String(v ?? "").replaceAll('"', '""')}"`).join(",")).join("\n");
+  download(new Blob([c], { type: "text/csv;charset=utf-8" }), "barcode_data.csv");
+};
+
+$("jsonBtn").onclick = () => download(new Blob([JSON.stringify(records, null, 2)], { type: "application/json" }), "barcode_backup.json");
+$("restoreBtn").onclick = () => $("restoreInput").click();
+$("restoreInput").onchange = e => {
+  let f = e.target.files[0]; if(!f) return;
+  let r = new FileReader();
+  r.onload = () => {
+    try { records = JSON.parse(r.result); store(); alert("Đã khôi phục thành công."); }
+    catch(_) { alert("File không hợp lệ."); }
+  };
+  r.readAsText(f);
+};
+
+render();
+</script>
+</body>
+</html>
