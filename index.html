@@ -21,7 +21,6 @@ button{border:0;font-weight:700;padding:13px;cursor:pointer}.primary{background:
 .small{font-size:12px}.hidden{display:none!important}
 @media(max-width:430px){main{padding:10px}.row{grid-template-columns:1fr}}
 </style>
-<!-- Thư viện quét mã ZXing -->
 <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
 </head>
 <body>
@@ -33,20 +32,19 @@ button{border:0;font-weight:700;padding:13px;cursor:pointer}.primary{background:
 
 <section class="card">
 <button class="primary" id="scanBtn">📷 Bắt đầu quét Barcode</button>
-<!-- Thẻ video cấu hình chuẩn cho Safari iOS với playsinline và webkit-playsinline -->
 <video id="reader" class="hidden" autoplay playsinline webkit-playsinline muted></video>
 <div class="actions" style="margin-top:10px">
 <button class="gray hidden" id="stopBtn">⏹ Dừng quét</button>
 <button class="gray" id="manualBtn">⌨️ Nhập thủ công</button>
 </div>
-<div class="status" id="scanStatus">Sẵn sàng quét. Hãy nhấn nút để mở camera.</div>
+<div class="status" id="scanStatus">Sẵn sàng quét. Bấm nút để mở camera.</div>
 </section>
 
 <section class="card">
 <label>Barcode *</label>
 <input id="barcode" inputmode="numeric" autocomplete="off" placeholder="Barcode sẽ tự điền sau khi quét">
 <label>Tên sản phẩm</label>
-<input id="name" placeholder="Tên sản phẩm">
+<input id="pName" placeholder="Tên sản phẩm">
 <div class="row">
 <div><label>Số lượng *</label><input id="qty" type="number" inputmode="numeric" min="1" value="1"></div>
 <div><label>Hạn sử dụng / Date *</label><input id="expiry" type="date"></div>
@@ -69,7 +67,7 @@ button{border:0;font-weight:700;padding:13px;cursor:pointer}.primary{background:
 <script>
 const KEY = "barcode_inventory_v2";
 let records = JSON.parse(localStorage.getItem(KEY) || "[]");
-let codeReader = null, mediaStream = null, photoData = "";
+let codeReader = null, mediaStream = null, photoData = "", isScanning = false;
 const $ = id => document.getElementById(id);
 
 function store(){ localStorage.setItem(KEY, JSON.stringify(records)); render(); }
@@ -95,26 +93,49 @@ function render(){
 }
 
 function clearForm(){
-  ["barcode", "name", "mfg", "expiry", "note"].forEach(x => $(x).value = "");
-  $("qty").value = 1; photoData = ""; $("photo").src = ""; $("photo").classList.add("hidden");
-  $("scanStatus").textContent = "Sẵn sàng quét.";
+  try {
+    $("barcode").value = "";
+    $("pName").value = "";
+    $("mfg").value = "";
+    $("expiry").value = "";
+    $("note").value = "";
+    $("qty").value = 1;
+    photoData = "";
+    $("photo").src = "";
+    $("photo").classList.add("hidden");
+    $("photoInput").value = "";
+    $("scanStatus").textContent = "Sẵn sàng quét.";
+  } catch(e) {
+    console.error("Lỗi xóa form:", e);
+  }
 }
 
 function editR(i){
   let r = records[i];
-  $("barcode").value = r.barcode; $("name").value = r.name; $("qty").value = r.qty;
-  $("mfg").value = r.mfg; $("expiry").value = r.expiry; $("note").value = r.note;
+  $("barcode").value = r.barcode;
+  $("pName").value = r.name;
+  $("qty").value = r.qty;
+  $("mfg").value = r.mfg;
+  $("expiry").value = r.expiry;
+  $("note").value = r.note;
   photoData = r.photo || "";
   if(photoData){ $("photo").src = photoData; $("photo").classList.remove("hidden"); }
-  records.splice(i, 1); store(); scrollTo({ top: 0, behavior: "smooth" });
+  records.splice(i, 1);
+  store();
+  scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function delR(i){ if(confirm("Xóa bản ghi này?")){ records.splice(i, 1); store(); } }
+function delR(i){
+  if(confirm("Xóa bản ghi này?")){
+    records.splice(i, 1);
+    store();
+  }
+}
 
-// Hàm mở camera tương thích hoàn toàn Safari iOS
 async function startScan(){
+  if (isScanning) return;
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    alert("Trình duyệt Safari này không hỗ trợ truy cập camera trực tiếp. Hãy đảm bảo chạy qua https://.");
+    alert("Safari không hỗ trợ camera hoặc trang chưa bật HTTPS.");
     return;
   }
   
@@ -123,61 +144,53 @@ async function startScan(){
   videoElem.classList.remove("hidden");
   $("stopBtn").classList.remove("hidden");
   $("scanBtn").disabled = true;
-  $("scanStatus").textContent = "Đang xin quyền Safari...";
+  $("scanStatus").textContent = "Đang kết nối camera...";
 
   try {
-    // 1. Kích hoạt camera sau qua MediaStream chuẩn
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: "environment" },
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      },
+      video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
       audio: false
     });
 
     mediaStream = stream;
     videoElem.srcObject = stream;
-    
-    // Đảm bảo Safari không chặn phát video
     await videoElem.play();
-    $("scanStatus").textContent = "Đưa mã barcode vào giữa khung camera...";
+    isScanning = true;
+    $("scanStatus").textContent = "Đưa mã barcode vào giữa khung...";
 
-    // 2. Chuyển video stream sang ZXing để đọc mã
     if (window.ZXingBrowser) {
       codeReader = new ZXingBrowser.BrowserMultiFormatReader();
       codeReader.decodeFromStream(stream, videoElem, (result, err) => {
-        if(result){
+        if(result && isScanning){
           let code = result.getText();
           $("barcode").value = code;
-          $("scanStatus").textContent = "✅ Đã quét thành công: " + code;
+          $("scanStatus").textContent = "✅ Đã nhận: " + code;
           navigator.vibrate?.(150);
           stopScan();
+          $("expiry").focus();
         }
       });
     }
   } catch (err) {
-    console.error("Safari camera error:", err);
+    console.error("Lỗi Safari Camera:", err);
     stopScan();
-    if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-      alert("Safari đang chặn Camera.\n\nCách mở lại trên iPhone:\n1. Bấm vào nút 'aA' trên thanh địa chỉ Safari\n2. Chọn 'Cài đặt trang web' (Website Settings)\n3. Đổi mục Camera sang 'Cho phép' (Allow) rồi tải lại trang.");
-    } else {
-      alert("Không thể khởi động camera: " + (err.message || err.name));
-    }
+    alert("Không thể mở camera. Kiểm tra lại quyền Camera trên Safari (biểu tượng aA > Cài đặt trang web).");
   }
 }
 
 function stopScan(){
+  isScanning = false;
   try {
     if(codeReader){
       codeReader.reset();
       codeReader = null;
     }
     if(mediaStream){
-      mediaStream.getTracks().forEach(t => t.stop());
+      mediaStream.getTracks().forEach(track => track.stop());
       mediaStream = null;
     }
     const videoElem = $("reader");
+    videoElem.pause();
     videoElem.srcObject = null;
   } catch(e){}
 
@@ -198,15 +211,29 @@ $("photoInput").onchange = e => {
 };
 
 $("saveBtn").onclick = () => {
-  let barcode = $("barcode").value.trim(), qty = Number($("qty").value), expiry = $("expiry").value;
-  if(!barcode) return alert("Vui lòng quét hoặc nhập barcode.");
-  if(qty < 1) return alert("Số lượng phải từ 1 trở lên.");
-  if(!expiry) return alert("Vui lòng nhập Date/HSD.");
+  let barcode = $("barcode").value.trim();
+  let qty = Number($("qty").value);
+  let expiry = $("expiry").value;
+
+  if(!barcode) return alert("Vui lòng quét hoặc nhập mã Barcode.");
+  if(qty < 1 || isNaN(qty)) return alert("Số lượng phải từ 1 trở lên.");
+  if(!expiry) return alert("Vui lòng nhập Hạn sử dụng / Date.");
+
   records.push({
-    barcode, name: $("name").value.trim(), qty, mfg: $("mfg").value, expiry,
-    photo: photoData, note: $("note").value.trim(), createdAt: new Date().toISOString()
+    barcode: barcode,
+    name: $("pName").value.trim(),
+    qty: qty,
+    mfg: $("mfg").value,
+    expiry: expiry,
+    photo: photoData,
+    note: $("note").value.trim(),
+    createdAt: new Date().toISOString()
   });
-  store(); clearForm(); alert("Đã lưu dữ liệu.");
+
+  store();
+  clearForm();
+  stopScan();
+  alert("Đã lưu thành công. Bạn có thể quét tiếp sản phẩm mới!");
 };
 
 $("clearBtn").onclick = clearForm;
