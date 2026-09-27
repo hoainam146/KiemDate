@@ -43,6 +43,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .btn-csv{background:linear-gradient(135deg,#5a4e99,#7b6fc4);color:#fff;box-shadow:0 4px 10px rgba(90,78,153,.30)}
 .btn-backup{background:linear-gradient(135deg,#2a6080,#3a80a8);color:#fff}
 .btn-restore{background:#e4ecf2;color:#2c3e50}
+.btn-danger{background:linear-gradient(135deg,#a31515,#c0392b);color:#fff;box-shadow:0 4px 10px rgba(192,57,43,.32)}
 .btn-remove-photo{background:#fdecea;color:#c0392b;border:1.5px solid #f1c0bb !important;padding:8px !important;font-size:12px;border-radius:9px !important}
 
 /* Grids */
@@ -193,6 +194,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <button class="btn-restore" id="restoreBtn">♻️ Khôi phục</button>
     </div>
     <input id="restoreInput" type="file" accept=".json" class="hidden">
+    <hr style="border:0;border-top:1.5px dashed #e4ecf2;margin:14px 0">
+    <button class="btn-danger" id="resetBtn">🗑 Xóa toàn bộ dữ liệu</button>
   </section>
 
 </main>
@@ -892,6 +895,40 @@ $("restoreInput").onchange = async e => {
 // ════════════════════════════════════════════════════════════
 // 13. INIT — auto-migrates v2 localStorage → v3 (IndexedDB)
 // ════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+// 14. RESET ALL DATA
+// ════════════════════════════════════════════════════════════
+function clearAllPhotosDB() {
+  return idbOp("readwrite", s => s.clear());
+}
+
+$('resetBtn').onclick = async () => {
+  if (!records.length) {
+    showMsg("Không có dữ liệu để xóa.", false); return;
+  }
+  // Double-confirm to prevent accidents
+  if (!confirm(`⚠️ XÓA TOÀN BỘ ${records.length} bản ghi và tất cả ảnh?\n\nHành động này KHÔNG THỂ hoàn tác!`)) return;
+  if (!confirm("Xác nhận lần 2: Toàn bộ dữ liệu sẽ bị xóa vĩnh viễn. Tiếp tục?")) return;
+
+  $('resetBtn').disabled  = true;
+  $('resetBtn').innerHTML = '<span class="spinner"></span>Đang xóa...';
+
+  try {
+    records = [];
+    localStorage.removeItem(LS_KEY);
+    await clearAllPhotosDB();
+    photoCache.clear();
+    clearForm();
+    await render();
+    showMsg("🗑 Đã xóa toàn bộ dữ liệu!", true);
+  } catch(err) {
+    showMsg("❌ Lỗi reset: " + err.message, false);
+  } finally {
+    $('resetBtn').disabled    = false;
+    $('resetBtn').textContent = "🗑 Xóa toàn bộ dữ liệu";
+  }
+};
+
 async function init() {
   const oldRaw = localStorage.getItem(LS_KEY_V2);
   const newRaw = localStorage.getItem(LS_KEY);
