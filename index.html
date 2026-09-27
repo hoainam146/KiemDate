@@ -3,268 +3,938 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#1f4e78">
+<meta name="theme-color" content="#1a3f63">
 <title>Quản lý Barcode Mobile</title>
+<meta name="description" content="Ứng dụng quản lý barcode sản phẩm, hạn sử dụng, ảnh chụp và xuất Excel.">
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#f4f6f8;color:#17202a}
-header{background:#1f4e78;color:white;padding:18px 16px;position:sticky;top:0;z-index:5}h1{font-size:21px;margin:0 0 4px}.sub{font-size:13px;opacity:.85}
-main{padding:12px;max-width:700px;margin:auto}.card{background:#fff;border-radius:16px;padding:15px;margin-bottom:12px;box-shadow:0 2px 10px #0001}
-label{display:block;font-weight:700;font-size:13px;margin:11px 0 6px}
-input,textarea,button{width:100%;font:inherit;border-radius:11px;border:1px solid #cbd5df;padding:12px;background:#fff}
-button{border:0;font-weight:700;padding:13px;cursor:pointer}.primary{background:#1f4e78;color:#fff}.green{background:#70ad47;color:#fff}.orange{background:#f4b183}.gray{background:#e7edf2}
-.row,.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-#reader{width:100%;max-height:48vh;object-fit:cover;border-radius:13px;background:#000;margin-top:10px}
-.status{padding:10px;border-radius:10px;background:#eef4f8;font-size:13px;margin-top:10px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#eef4f8;border-radius:12px;padding:10px;text-align:center}.stat b{display:block;font-size:20px}
-.item{border:1px solid #e0e5e9;border-radius:12px;padding:11px;margin-top:8px}.item strong{display:block}.muted{font-size:12px;color:#68737d}
-.badge{display:inline-block;padding:4px 7px;border-radius:8px;font-size:11px;font-weight:700}.ok{background:#e2f0d9;color:#315c22}.soon{background:#fce4d6;color:#8a3d16}.expired{background:#f4cccc;color:#8a1c1c}
-.small{font-size:12px}.hidden{display:none!important}
-@media(max-width:430px){main{padding:10px}.row{grid-template-columns:1fr}}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#f0f4f8;color:#17202a}
+header{background:linear-gradient(135deg,#1a3f63 0%,#2e75b6 100%);color:#fff;padding:18px 16px 14px;position:sticky;top:0;z-index:10;box-shadow:0 3px 16px rgba(31,78,120,.35)}
+h1{font-size:21px;margin:0 0 3px;letter-spacing:-.3px}
+.sub{font-size:12px;opacity:.75;letter-spacing:.2px}
+main{padding:12px;max-width:700px;margin:auto}
+
+/* Cards */
+.card{background:#fff;border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 2px 12px rgba(0,0,0,.07)}
+
+/* Labels & Inputs */
+label{display:block;font-weight:700;font-size:12px;margin:12px 0 5px;color:#2c3e50;text-transform:uppercase;letter-spacing:.4px}
+input[type=text],input[type=number],input[type=date],textarea{
+  width:100%;font:inherit;border-radius:12px;border:1.5px solid #d0d9e4;
+  padding:12px 14px;background:#fff;transition:border-color .2s,box-shadow .2s;color:#17202a}
+input:focus,textarea:focus{outline:none;border-color:#2e75b6;box-shadow:0 0 0 3px rgba(46,117,182,.12)}
+input[type=file]{
+  width:100%;font:inherit;border-radius:12px;border:1.5px dashed #adc4db;
+  padding:10px 14px;background:#f5f9ff;color:#3a5a78;cursor:pointer}
+textarea{resize:vertical}
+
+/* Buttons */
+button{
+  width:100%;font:inherit;border:0;border-radius:12px;padding:13px;
+  cursor:pointer;font-weight:700;font-size:14px;
+  transition:opacity .15s,transform .1s,box-shadow .2s;letter-spacing:.1px}
+button:active:not(:disabled){opacity:.82;transform:scale(.97)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:linear-gradient(135deg,#1f4e78,#2e75b6);color:#fff;box-shadow:0 4px 12px rgba(31,78,120,.32)}
+.btn-green{background:linear-gradient(135deg,#5a9e35,#70ad47);color:#fff;box-shadow:0 4px 10px rgba(112,173,71,.32)}
+.btn-orange{background:#f0a070;color:#fff}
+.btn-gray{background:#e4ecf2;color:#2c3e50}
+.btn-excel{background:linear-gradient(135deg,#1a5c38,#217346);color:#fff;box-shadow:0 4px 10px rgba(33,115,70,.30)}
+.btn-csv{background:linear-gradient(135deg,#5a4e99,#7b6fc4);color:#fff;box-shadow:0 4px 10px rgba(90,78,153,.30)}
+.btn-backup{background:linear-gradient(135deg,#2a6080,#3a80a8);color:#fff}
+.btn-restore{background:#e4ecf2;color:#2c3e50}
+.btn-remove-photo{background:#fdecea;color:#c0392b;border:1.5px solid #f1c0bb !important;padding:8px !important;font-size:12px;border-radius:9px !important}
+
+/* Grids */
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:linear-gradient(135deg,#eef4fb,#e0ecf7);border-radius:14px;padding:12px 8px;text-align:center}
+.stat b{display:block;font-size:24px;color:#1f4e78;font-weight:800;line-height:1.1}
+.stat .slabel{color:#5a7a98;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+
+/* Scanner */
+#reader{width:100%;border-radius:14px;overflow:hidden;background:#000;margin-top:10px;min-height:180px}
+
+/* Status bar */
+.status{padding:10px 14px;border-radius:11px;background:#eef4fb;font-size:13px;
+  margin-top:10px;font-weight:600;text-align:center;transition:background .3s,color .3s}
+
+/* Edit banner */
+.edit-banner{background:#fff8ec;border:2px solid #f0a070;border-radius:12px;
+  padding:9px 13px;font-size:13px;font-weight:700;color:#7a4000;margin-bottom:12px;
+  display:flex;align-items:center;gap:7px}
+
+/* Photo preview */
+.preview-wrap{margin-top:8px}
+.preview-img{width:100%;max-height:260px;object-fit:contain;border-radius:12px;
+  border:1.5px solid #d0dde8;display:block}
+
+/* List items */
+.item{border:1.5px solid #e4ecf2;border-radius:14px;padding:13px;margin-top:9px;
+  background:#fff;transition:box-shadow .2s,border-color .2s}
+.item:hover{box-shadow:0 4px 16px rgba(31,78,120,.09);border-color:#c4d4e4}
+.item strong{display:block;font-size:15px;color:#17202a;margin-bottom:3px}
+.muted{font-size:12px;color:#68737d;margin-top:2px;line-height:1.6}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;
+  font-weight:800;margin-top:6px;letter-spacing:.3px}
+.ok{background:#e2f0d9;color:#2a5219}
+.soon{background:#fce4d6;color:#7a3010}
+.expired{background:#fde0df;color:#7a1010}
+
+/* Photo thumbnail */
+.photo-thumb{width:78px;height:78px;object-fit:cover;border-radius:9px;
+  margin-top:8px;display:block;border:1.5px solid #d8e5ef}
+
+/* Spinner */
+.spinner{display:inline-block;width:13px;height:13px;border:2.5px solid rgba(255,255,255,.35);
+  border-top-color:#fff;border-radius:50%;animation:spin .55s linear infinite;
+  vertical-align:middle;margin-right:5px}
+.spinner-dark{border-color:rgba(0,0,0,.15);border-top-color:#444}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.hidden{display:none!important}
+.mt8{margin-top:8px}
+.mt12{margin-top:12px}
+
+@media(max-width:480px){
+  main{padding:8px}
+  .row{grid-template-columns:1fr}
+  h1{font-size:18px}
+}
 </style>
-<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
-<header><h1>📦 Quản lý Barcode</h1><div class="sub">Camera • Barcode • Số lượng • Date/HSD • Ảnh</div></header>
+
+<header>
+  <h1>📦 Quản lý Barcode</h1>
+  <div class="sub">Camera · Barcode · Số lượng · HSD · Ảnh sản phẩm</div>
+</header>
+
 <main>
-<section class="card">
-<div class="stats"><div class="stat"><b id="totalRows">0</b><span class="small">Dòng</span></div><div class="stat"><b id="totalQty">0</b><span class="small">Số lượng</span></div><div class="stat"><b id="expired">0</b><span class="small">Hết hạn</span></div></div>
-</section>
 
-<section class="card">
-<button class="primary" id="scanBtn">📷 Bắt đầu quét Barcode</button>
-<video id="reader" class="hidden" autoplay playsinline webkit-playsinline muted></video>
-<div class="actions" style="margin-top:10px">
-<button class="gray hidden" id="stopBtn">⏹ Dừng quét</button>
-<button class="gray" id="manualBtn">⌨️ Nhập thủ công</button>
-</div>
-<div class="status" id="scanStatus">Sẵn sàng quét. Bấm nút để mở camera.</div>
-</section>
+  <!-- Stats -->
+  <section class="card">
+    <div class="stats">
+      <div class="stat"><b id="totalRows">0</b><div class="slabel">Dòng</div></div>
+      <div class="stat"><b id="totalQty">0</b><div class="slabel">Tổng SL</div></div>
+      <div class="stat"><b id="expiredCount">0</b><div class="slabel">Hết hạn</div></div>
+    </div>
+  </section>
 
-<section class="card">
-<label>Barcode *</label>
-<input id="barcode" inputmode="numeric" autocomplete="off" placeholder="Barcode sẽ tự điền sau khi quét">
-<label>Tên sản phẩm</label>
-<input id="pName" placeholder="Tên sản phẩm">
-<div class="row">
-<div><label>Số lượng *</label><input id="qty" type="number" inputmode="numeric" min="1" value="1"></div>
-<div><label>Hạn sử dụng / Date *</label><input id="expiry" type="date"></div>
-</div>
-<label>Ngày sản xuất</label><input id="mfg" type="date">
-<label>Ảnh sản phẩm</label><input id="photoInput" type="file" accept="image/*" capture="environment">
-<img id="photo" class="hidden" style="width:100%;max-height:280px;object-fit:contain;border-radius:10px;margin-top:8px">
-<label>Ghi chú</label><textarea id="note" rows="2" placeholder="Ghi chú"></textarea>
-<div class="actions" style="margin-top:12px"><button class="green" id="saveBtn">💾 Lưu</button><button class="orange" id="clearBtn">🧹 Xóa</button></div>
-</section>
+  <!-- Scanner -->
+  <section class="card">
+    <button class="btn-primary" id="scanBtn">📷 Bắt đầu quét Barcode</button>
+    <div id="reader" class="hidden"></div>
+    <div class="actions mt8">
+      <button class="btn-gray hidden" id="stopBtn">⏹ Dừng quét</button>
+      <button class="btn-gray" id="manualBtn">⌨️ Nhập thủ công</button>
+    </div>
+    <div class="status" id="scanStatus">Sẵn sàng. Bấm nút để mở camera.</div>
+  </section>
 
-<section class="card">
-<label>Tìm kiếm</label><input id="search" placeholder="Barcode hoặc tên sản phẩm">
-<div id="list"></div>
-<div class="actions" style="margin-top:12px"><button class="primary" id="csvBtn">📊 Xuất CSV</button><button class="gray" id="jsonBtn">💾 Sao lưu</button></div>
-<input id="restoreInput" type="file" accept=".json" class="hidden"><button class="gray" id="restoreBtn" style="margin-top:8px">♻️ Khôi phục</button>
-</section>
+  <!-- Form -->
+  <section class="card" id="formCard">
+    <div id="editBanner" class="edit-banner hidden">✏️ Đang chỉnh sửa — bấm Cập nhật để lưu</div>
+
+    <label>Barcode *</label>
+    <input id="barcode" type="text" inputmode="numeric" autocomplete="off"
+           placeholder="Barcode tự điền hoặc nhập tay">
+
+    <label>Tên sản phẩm</label>
+    <input id="pName" type="text" placeholder="Tên sản phẩm">
+
+    <div class="row">
+      <div>
+        <label>Số lượng *</label>
+        <input id="qty" type="number" inputmode="numeric" min="1" value="1">
+      </div>
+      <div>
+        <label>Hạn sử dụng *</label>
+        <input id="expiry" type="date">
+      </div>
+    </div>
+
+    <label>Ngày sản xuất</label>
+    <input id="mfg" type="date">
+
+    <label>Ảnh sản phẩm</label>
+    <input id="photoInput" type="file" accept="image/*" capture="environment">
+    <div id="photoPreviewWrap" class="preview-wrap hidden">
+      <img id="photoPreview" class="preview-img" src="" alt="Xem trước ảnh">
+      <button class="btn-remove-photo mt8" id="removePhotoBtn">🗑 Xóa ảnh</button>
+    </div>
+
+    <label>Ghi chú</label>
+    <textarea id="note" rows="2" placeholder="Ghi chú thêm..."></textarea>
+
+    <div class="actions mt12">
+      <button class="btn-green" id="saveBtn">💾 Lưu</button>
+      <button class="btn-orange" id="clearBtn">🧹 Xóa form</button>
+    </div>
+  </section>
+
+  <!-- List & Export -->
+  <section class="card">
+    <label>🔍 Tìm kiếm</label>
+    <input id="search" type="text" placeholder="Barcode hoặc tên sản phẩm...">
+    <div id="list"></div>
+
+    <div class="row mt12">
+      <button class="btn-excel" id="xlsxBtn">📊 Xuất Excel (có ảnh)</button>
+      <button class="btn-csv"   id="csvBtn">📄 Xuất CSV</button>
+    </div>
+    <div class="row mt8">
+      <button class="btn-backup"  id="jsonBtn">💾 Sao lưu JSON</button>
+      <button class="btn-restore" id="restoreBtn">♻️ Khôi phục</button>
+    </div>
+    <input id="restoreInput" type="file" accept=".json" class="hidden">
+  </section>
+
 </main>
 
 <script>
-const KEY = "barcode_inventory_v2";
-let records = JSON.parse(localStorage.getItem(KEY) || "[]");
-let codeReader = null, mediaStream = null, photoData = "", isScanning = false;
+"use strict";
+
+// ════════════════════════════════════════════════════════════
+// 1. CONSTANTS & STATE
+// ════════════════════════════════════════════════════════════
+const LS_KEY    = "barcode_v3";
+const LS_KEY_V2 = "barcode_inventory_v2"; // legacy key for migration
+
+let records      = [];     // metadata only — no photo blobs here
+let html5QrCode  = null;   // scanner instance
+let isStarting   = false;  // race-condition guard for startScan()
+let photoData    = "";     // base64 of current form photo (or "" if none)
+let photoRemoved = false;  // true when user explicitly clicked "Xóa ảnh"
+let editingId    = "";     // UUID of record being edited ("" = creating new)
+
+const photoCache = new Map(); // in-memory cache: id → dataUrl
 const $ = id => document.getElementById(id);
 
-function store(){ localStorage.setItem(KEY, JSON.stringify(records)); render(); }
-function esc(v){ return String(v ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
 
-function stat(r){
-  if(!r.expiry) return ["CÒN HẠN", "ok"];
-  let d = new Date(r.expiry + "T23:59:59"), days = Math.ceil((d - new Date()) / 86400000);
-  if(days < 0) return ["ĐÃ HẾT HẠN", "expired"];
-  if(days <= 7) return ["SẮP HẾT HẠN", "soon"];
+// ════════════════════════════════════════════════════════════
+// 2. INDEXEDDB — photo storage (keeps localStorage lean)
+// ════════════════════════════════════════════════════════════
+let _db = null;
+const dbReady = new Promise((resolve, reject) => {
+  const req = indexedDB.open("barcode_photos_v1", 1);
+  req.onupgradeneeded = ev => ev.target.result.createObjectStore("photos");
+  req.onsuccess = ev => { _db = ev.target.result; resolve(_db); };
+  req.onerror   = () => reject(req.error);
+});
+
+function idbOp(mode, fn) {
+  return dbReady.then(db => new Promise((res, rej) => {
+    const tx  = db.transaction("photos", mode);
+    const req = fn(tx.objectStore("photos"));
+    req.onsuccess = () => res(req.result);
+    req.onerror   = () => rej(req.error);
+  }));
+}
+
+const savePhotoDB = (id, url) => idbOp("readwrite", s => s.put(url, id));
+const getPhotoDB  = id        => idbOp("readonly",  s => s.get(id));
+const delPhotoDB  = id        => idbOp("readwrite", s => s.delete(id));
+
+async function fetchPhotos(ids) {
+  const result = {};
+  await Promise.all(ids.map(async id => {
+    if (photoCache.has(id)) { result[id] = photoCache.get(id); return; }
+    const url = await getPhotoDB(id);
+    if (url) { photoCache.set(id, url); result[id] = url; }
+  }));
+  return result;
+}
+
+
+// ════════════════════════════════════════════════════════════
+// 3. LOCALSTORAGE — record metadata (no photos)
+// ════════════════════════════════════════════════════════════
+function loadRecords() {
+  try { records = JSON.parse(localStorage.getItem(LS_KEY) || "[]"); }
+  catch { records = []; }
+}
+
+function storeRecords() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(records)); }
+  catch(e) { alert("Lỗi lưu dữ liệu: " + e.message); }
+}
+
+
+// ════════════════════════════════════════════════════════════
+// 4. UTILITIES
+// ════════════════════════════════════════════════════════════
+function genId() {
+  return typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+function esc(v) {
+  return String(v ?? "").replace(/[&<>"']/g,
+    m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+}
+
+function showMsg(msg, ok = true) {
+  const el = $("scanStatus");
+  el.textContent      = msg;
+  el.style.background = ok ? "#dff2d8" : "#fde8e4";
+  el.style.color      = ok ? "#27582a" : "#8a1c1c";
+}
+
+function stat(r) {
+  if (!r.expiry) return ["CÒN HẠN", "ok"];
+  const days = Math.ceil((new Date(r.expiry + "T23:59:59") - new Date()) / 86400000);
+  if (days < 0)  return ["ĐÃ HẾT HẠN", "expired"];
+  if (days <= 7) return ["SẮP HẾT HẠN", "soon"];
   return ["CÒN HẠN", "ok"];
 }
 
-function render(){
-  $("totalRows").textContent = records.length;
-  $("totalQty").textContent = records.reduce((a, r) => a + Number(r.qty || 0), 0);
-  $("expired").textContent = records.filter(r => stat(r)[0] == "ĐÃ HẾT HẠN").length;
-  let q = $("search").value.toLowerCase(), arr = records.filter(r => (r.barcode + " " + r.name).toLowerCase().includes(q)).slice().reverse();
-  $("list").innerHTML = arr.length ? arr.map(r => {
-    let i = records.indexOf(r), s = stat(r);
-    return `<div class="item"><strong>${esc(r.name || "Chưa đặt tên")}</strong><div class="muted">Barcode: ${esc(r.barcode)} · SL: ${esc(r.qty)} · Date: ${esc(r.expiry || "-")}</div><span class="badge ${s[1]}">${s[0]}</span>${r.photo ? `<br><img src="${r.photo}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin-top:7px">` : ""}<div class="actions" style="margin-top:7px"><button class="gray" onclick="editR(${i})">Sửa</button><button class="gray" onclick="delR(${i})">Xóa</button></div></div>`;
-  }).join("") : "<div class='muted'>Chưa có dữ liệu.</div>";
+function debounce(fn, ms) {
+  let t;
+  return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
 }
 
-function clearForm(){
-  try {
-    $("barcode").value = "";
-    $("pName").value = "";
-    $("mfg").value = "";
-    $("expiry").value = "";
-    $("note").value = "";
-    $("qty").value = 1;
-    photoData = "";
-    $("photo").src = "";
-    $("photo").classList.add("hidden");
-    $("photoInput").value = "";
-    $("scanStatus").textContent = "Sẵn sàng quét.";
-  } catch(e) {
-    console.error("Lỗi xóa form:", e);
-  }
+function compressImage(file) {
+  return new Promise(resolve => {
+    const fr = new FileReader();
+    fr.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 640;
+        const w = Math.min(img.width, maxW);
+        const h = img.height * (w / img.width);
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        c.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(c.toDataURL("image/jpeg", 0.68));
+      };
+      img.src = ev.target.result;
+    };
+    fr.readAsDataURL(file);
+  });
 }
 
-function editR(i){
-  let r = records[i];
-  $("barcode").value = r.barcode;
-  $("pName").value = r.name;
-  $("qty").value = r.qty;
-  $("mfg").value = r.mfg;
-  $("expiry").value = r.expiry;
-  $("note").value = r.note;
-  photoData = r.photo || "";
-  if(photoData){ $("photo").src = photoData; $("photo").classList.remove("hidden"); }
-  records.splice(i, 1);
-  store();
-  scrollTo({ top: 0, behavior: "smooth" });
+function download(blob, name) {
+  const a    = document.createElement("a");
+  a.href     = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  // Revoke after click event completes (safer than setTimeout 1000)
+  requestAnimationFrame(() => URL.revokeObjectURL(a.href));
 }
 
-function delR(i){
-  if(confirm("Xóa bản ghi này?")){
-    records.splice(i, 1);
-    store();
-  }
+function fmtDate() {
+  return new Date().toISOString().slice(0, 10);
 }
 
-async function startScan(){
-  if (isScanning) return;
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    alert("Safari không hỗ trợ camera hoặc trang chưa bật HTTPS.");
+
+// ════════════════════════════════════════════════════════════
+// 5. RENDER — fast skeleton, then lazy-load photos
+// ════════════════════════════════════════════════════════════
+async function render() {
+  $("totalRows").textContent    = records.length;
+  $("totalQty").textContent     = records.reduce((a, r) => a + Number(r.qty || 0), 0);
+  $("expiredCount").textContent = records.filter(r => stat(r)[0] === "ĐÃ HẾT HẠN").length;
+
+  const q = ($("search").value || "").toLowerCase();
+  const filtered = records
+    .filter(r => (r.barcode + " " + (r.name || "")).toLowerCase().includes(q))
+    .slice()
+    .reverse();
+
+  if (!filtered.length) {
+    $("list").innerHTML = `<div class="muted" style="padding:14px 0 4px;text-align:center">
+      Chưa có dữ liệu. Quét hoặc nhập barcode để bắt đầu.</div>`;
     return;
   }
-  
-  stopScan();
-  const videoElem = $("reader");
-  videoElem.classList.remove("hidden");
-  $("stopBtn").classList.remove("hidden");
-  $("scanBtn").disabled = true;
-  $("scanStatus").textContent = "Đang kết nối camera...";
 
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
-      audio: false
-    });
+  // Render without photos first (instant)
+  $("list").innerHTML = filtered.map(r => {
+    const s      = stat(r);
+    const safeId = esc(r.id);
+    return `<div class="item">
+      <strong>${esc(r.name || "Chưa đặt tên")}</strong>
+      <div class="muted">🔖 <b>${esc(r.barcode)}</b> &nbsp;·&nbsp; SL: <b>${esc(r.qty)}</b> &nbsp;·&nbsp; HSD: ${esc(r.expiry || "—")}</div>
+      ${r.mfg  ? `<div class="muted">🏭 NSX: ${esc(r.mfg)}</div>` : ""}
+      ${r.note ? `<div class="muted">📝 ${esc(r.note)}</div>`     : ""}
+      <span class="badge ${s[1]}">${s[0]}</span>
+      ${r.hasPhoto ? `<img id="img_${safeId}" class="photo-thumb" src="" alt="ảnh">` : ""}
+      <div class="actions" style="margin-top:9px">
+        <button class="btn-gray" onclick="editR('${safeId}')">✏️ Sửa</button>
+        <button class="btn-gray" onclick="delR('${safeId}')">🗑 Xóa</button>
+      </div>
+    </div>`;
+  }).join("");
 
-    mediaStream = stream;
-    videoElem.srcObject = stream;
-    await videoElem.play();
-    isScanning = true;
-    $("scanStatus").textContent = "Đưa mã barcode vào giữa khung...";
-
-    if (window.ZXingBrowser) {
-      codeReader = new ZXingBrowser.BrowserMultiFormatReader();
-      codeReader.decodeFromStream(stream, videoElem, (result, err) => {
-        if(result && isScanning){
-          let code = result.getText();
-          $("barcode").value = code;
-          $("scanStatus").textContent = "✅ Đã nhận: " + code;
-          navigator.vibrate?.(150);
-          stopScan();
-          $("expiry").focus();
-        }
-      });
+  // Lazy-load photos from IndexedDB asynchronously
+  const withPhotos = filtered.filter(r => r.hasPhoto);
+  if (withPhotos.length) {
+    const photos = await fetchPhotos(withPhotos.map(r => r.id));
+    for (const [id, url] of Object.entries(photos)) {
+      const el = document.getElementById("img_" + id);
+      if (el) el.src = url;
     }
-  } catch (err) {
-    console.error("Lỗi Safari Camera:", err);
-    stopScan();
-    alert("Không thể mở camera. Kiểm tra lại quyền Camera trên Safari (biểu tượng aA > Cài đặt trang web).");
   }
 }
 
-function stopScan(){
-  isScanning = false;
-  try {
-    if(codeReader){
-      codeReader.reset();
-      codeReader = null;
-    }
-    if(mediaStream){
-      mediaStream.getTracks().forEach(track => track.stop());
-      mediaStream = null;
-    }
-    const videoElem = $("reader");
-    videoElem.pause();
-    videoElem.srcObject = null;
-  } catch(e){}
 
-  $("reader").classList.add("hidden");
-  $("stopBtn").classList.add("hidden");
-  $("scanBtn").disabled = false;
+// ════════════════════════════════════════════════════════════
+// 6. FORM — clear / edit / delete
+// ════════════════════════════════════════════════════════════
+function clearForm() {
+  ["barcode","pName","mfg","expiry","note"].forEach(id => $(id).value = "");
+  $("qty").value        = "1";
+  $("photoInput").value = "";
+  photoData    = "";
+  photoRemoved = false;
+  editingId    = "";
+  $("photoPreview").src = "";
+  $("photoPreviewWrap").classList.add("hidden");
+  $("editBanner").classList.add("hidden");
+  $("saveBtn").textContent = "💾 Lưu";
 }
 
-$("scanBtn").onclick = startScan;
-$("stopBtn").onclick = stopScan;
-$("manualBtn").onclick = () => { $("barcode").focus(); stopScan(); };
+async function editR(id) {
+  const r = records.find(x => x.id === id);
+  if (!r) return;
 
-$("photoInput").onchange = e => {
-  let f = e.target.files[0]; if(!f) return;
-  let r = new FileReader();
-  r.onload = () => { photoData = r.result; $("photo").src = photoData; $("photo").classList.remove("hidden"); };
-  r.readAsDataURL(f);
-};
+  // FIX: populate form WITHOUT removing record from array
+  editingId          = id;
+  $("barcode").value = r.barcode;
+  $("pName").value   = r.name    || "";
+  $("qty").value     = r.qty;
+  $("mfg").value     = r.mfg    || "";
+  $("expiry").value  = r.expiry  || "";
+  $("note").value    = r.note   || "";
 
-$("saveBtn").onclick = () => {
-  let barcode = $("barcode").value.trim();
-  let qty = Number($("qty").value);
-  let expiry = $("expiry").value;
+  $("editBanner").classList.remove("hidden");
+  $("saveBtn").textContent = "✅ Cập nhật";
 
-  if(!barcode) return alert("Vui lòng quét hoặc nhập mã Barcode.");
-  if(qty < 1 || isNaN(qty)) return alert("Số lượng phải từ 1 trở lên.");
-  if(!expiry) return alert("Vui lòng nhập Hạn sử dụng / Date.");
+  photoData    = "";
+  photoRemoved = false;
+  $("photoPreviewWrap").classList.add("hidden");
 
-  records.push({
-    barcode: barcode,
-    name: $("pName").value.trim(),
-    qty: qty,
-    mfg: $("mfg").value,
-    expiry: expiry,
-    photo: photoData,
-    note: $("note").value.trim(),
-    createdAt: new Date().toISOString()
-  });
+  if (r.hasPhoto) {
+    const url = await getPhotoDB(id);
+    if (url) {
+      photoData             = url;
+      $("photoPreview").src = url;
+      $("photoPreviewWrap").classList.remove("hidden");
+    }
+  }
 
-  store();
-  clearForm();
+  scrollTo({ top: 0, behavior: "smooth" });
+  showMsg("Đang chỉnh sửa: " + (r.name || r.barcode), true);
+}
+
+async function delR(id) {
+  if (!confirm("Xóa bản ghi này?")) return;
+  records = records.filter(r => r.id !== id);
+  await delPhotoDB(id).catch(() => {});
+  photoCache.delete(id);
+  storeRecords();
+  await render();
+}
+
+
+// ════════════════════════════════════════════════════════════
+// 7. SAVE / UPDATE
+// ════════════════════════════════════════════════════════════
+$("saveBtn").onclick = async () => {
+  const barcode = ($("barcode").value || "").trim();
+  const qty     = Number($("qty").value);
+  const expiry  = $("expiry").value;
+  const mfg     = $("mfg").value;
+
+  // Validation
+  if (!barcode) {
+    showMsg("⚠️ Nhập hoặc quét Barcode trước!", false);
+    $("barcode").focus(); return;
+  }
+  if (!qty || qty < 1) {
+    showMsg("⚠️ Số lượng phải lớn hơn 0!", false); return;
+  }
+  if (!expiry) {
+    showMsg("⚠️ Chọn Hạn sử dụng!", false);
+    $("expiry").focus(); return;
+  }
+  // FIX: validate mfg <= expiry
+  if (mfg && expiry && mfg > expiry) {
+    showMsg("⚠️ Ngày sản xuất không thể sau Hạn sử dụng!", false); return;
+  }
+
   stopScan();
-  alert("Đã lưu thành công. Bạn có thể quét tiếp sản phẩm mới!");
+  const origLabel       = $("saveBtn").textContent;
+  $("saveBtn").disabled = true;
+  $("saveBtn").innerHTML = '<span class="spinner"></span>Đang lưu...';
+
+  try {
+    const isEdit   = !!editingId;
+    const id       = isEdit ? editingId : genId();
+    const existing = isEdit ? records.find(r => r.id === editingId) : null;
+
+    // Determine photo state for this record
+    let hasPhoto;
+    if (photoRemoved) {
+      hasPhoto = false;
+      await delPhotoDB(id).catch(() => {});
+      photoCache.delete(id);
+    } else if (photoData) {
+      // Save photo (new upload or existing loaded into photoData)
+      hasPhoto = true;
+      await savePhotoDB(id, photoData);
+      photoCache.set(id, photoData);
+    } else {
+      // No change to photo state
+      hasPhoto = isEdit ? (existing?.hasPhoto || false) : false;
+    }
+
+    const rec = {
+      id,
+      barcode,
+      name:      ($("pName").value || "").trim(),
+      qty,
+      mfg:       mfg || "",
+      expiry,
+      note:      ($("note").value || "").trim(),
+      hasPhoto,
+      createdAt: existing?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    if (isEdit) {
+      records = records.map(r => r.id === editingId ? rec : r);
+    } else {
+      records.push(rec);
+    }
+
+    storeRecords();
+    clearForm();
+    await render();
+    showMsg(isEdit ? "✅ Cập nhật thành công!" : "✅ Đã lưu! Bấm quét để tiếp tục.", true);
+  } catch(err) {
+    console.error("Save error:", err);
+    showMsg("❌ Lỗi khi lưu: " + err.message, false);
+  } finally {
+    $("saveBtn").disabled    = false;
+    $("saveBtn").textContent = origLabel;
+  }
 };
 
-$("clearBtn").onclick = clearForm;
-$("search").oninput = render;
+$("clearBtn").onclick = () => { clearForm(); showMsg("Đã xóa form."); };
 
-function download(b, n){
-  let a = document.createElement("a");
-  a.href = URL.createObjectURL(b); a.download = n; a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+
+// ════════════════════════════════════════════════════════════
+// 8. PHOTO HANDLING
+// ════════════════════════════════════════════════════════════
+$("photoInput").onchange = async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    photoData             = await compressImage(file);
+    photoRemoved          = false;
+    $("photoPreview").src = photoData;
+    $("photoPreviewWrap").classList.remove("hidden");
+  } catch(err) {
+    showMsg("Lỗi xử lý ảnh: " + err.message, false);
+  }
+};
+
+$("removePhotoBtn").onclick = () => {
+  photoData             = "";
+  photoRemoved          = true;
+  $("photoInput").value = "";
+  $("photoPreview").src = "";
+  $("photoPreviewWrap").classList.add("hidden");
+};
+
+
+// ════════════════════════════════════════════════════════════
+// 9. SCANNER — fixed lifecycle (no stale instance)
+// ════════════════════════════════════════════════════════════
+async function startScan() {
+  if (isStarting) return; // FIX: race-condition guard
+
+  isStarting = true;
+  $("scanBtn").disabled = true;
+  $("stopBtn").classList.remove("hidden");
+  $("reader").classList.remove("hidden");
+  showMsg("Đang kết nối camera...");
+
+  try {
+    // FIX: always create a fresh instance (old one may be in broken state)
+    html5QrCode = new Html5Qrcode("reader");
+
+    await html5QrCode.start(
+      { facingMode: "environment" },
+      {
+        fps: 15,
+        qrbox: { width: 270, height: 170 },
+        experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+      },
+      decodedText => {
+        $("barcode").value = decodedText;
+        showMsg("✅ Đã nhận: " + decodedText, true);
+        navigator.vibrate?.(100);
+        stopScan();
+        $("expiry").focus();
+      },
+      () => {} // Per-frame errors — suppress (normal during scanning)
+    );
+
+    showMsg("Đưa barcode vào khung ngắm...");
+  } catch(err) {
+    console.error("Camera error:", err);
+    showMsg("Không thể mở camera. Kiểm tra quyền camera trong trình duyệt.", false);
+    await stopScan();
+  } finally {
+    isStarting = false; // FIX: always release guard
+  }
 }
 
+async function stopScan() {
+  try {
+    if (html5QrCode) {
+      if (html5QrCode.isScanning) await html5QrCode.stop();
+      html5QrCode.clear?.();
+      html5QrCode = null; // FIX: reset so next scan gets fresh instance
+    }
+  } catch(e) {
+    html5QrCode = null;
+  } finally {
+    // FIX: cleanup always runs, even if stop() throws
+    $("reader").classList.add("hidden");
+    $("stopBtn").classList.add("hidden");
+    $("scanBtn").disabled = false;
+  }
+}
+
+$("scanBtn").onclick   = startScan;
+$("stopBtn").onclick   = stopScan;
+$("manualBtn").onclick = () => { stopScan(); $("barcode").focus(); };
+
+// FIX: debounce search to avoid thrashing on every keystroke
+$("search").oninput = debounce(render, 220);
+
+
+// ════════════════════════════════════════════════════════════
+// 10. EXPORT CSV
+// ════════════════════════════════════════════════════════════
 $("csvBtn").onclick = () => {
-  let h = ["Barcode", "Tên sản phẩm", "Số lượng", "Ngày sản xuất", "Hạn sử dụng", "Ghi chú", "Thời gian"];
-  let rows = records.map(r => [r.barcode, r.name, r.qty, r.mfg, r.expiry, r.note, r.createdAt]);
-  let c = "\uFEFF" + [h, ...rows].map(a => a.map(v => `"${String(v ?? "").replaceAll('"', '""')}"`).join(",")).join("\n");
-  download(new Blob([c], { type: "text/csv;charset=utf-8" }), "barcode_data.csv");
+  const headers = [
+    "Barcode","Tên sản phẩm","Số lượng","Ngày sản xuất",
+    "Hạn sử dụng","Trạng thái","Ghi chú","Thời gian tạo"
+  ];
+  const rows = records.map(r => {
+    const s = stat(r);
+    return [r.barcode, r.name||"", r.qty, r.mfg||"", r.expiry||"", s[0], r.note||"", r.createdAt||""];
+  });
+  const csv = "\uFEFF" + [headers, ...rows]
+    .map(row => row.map(v => `"${String(v ?? "").replaceAll('"','""')}"`).join(","))
+    .join("\n");
+  download(new Blob([csv], { type: "text/csv;charset=utf-8" }), `barcode_${fmtDate()}.csv`);
+  showMsg("✅ Xuất CSV thành công!", true);
 };
 
-$("jsonBtn").onclick = () => download(new Blob([JSON.stringify(records, null, 2)], { type: "application/json" }), "barcode_backup.json");
+
+// ════════════════════════════════════════════════════════════
+// 11. EXPORT XLSX with embedded photos  (ExcelJS, lazy-loaded)
+// ════════════════════════════════════════════════════════════
+let _excelJSLoaded = false;
+function loadExcelJS() {
+  if (_excelJSLoaded || typeof ExcelJS !== "undefined") {
+    _excelJSLoaded = true;
+    return Promise.resolve();
+  }
+  return new Promise((resolve, reject) => {
+    const s   = document.createElement("script");
+    s.src     = "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js";
+    s.onload  = () => { _excelJSLoaded = true; resolve(); };
+    s.onerror = () => reject(new Error("Không tải được ExcelJS. Kiểm tra kết nối mạng."));
+    document.head.appendChild(s);
+  });
+}
+
+$("xlsxBtn").onclick = async () => {
+  if (!records.length) { showMsg("Chưa có dữ liệu để xuất!", false); return; }
+
+  $("xlsxBtn").disabled  = true;
+  $("xlsxBtn").innerHTML = '<span class="spinner"></span>Đang tải thư viện...';
+
+  try {
+    await loadExcelJS();
+    $("xlsxBtn").innerHTML = '<span class="spinner"></span>Đang tạo file Excel...';
+
+    const wb = new ExcelJS.Workbook();
+    wb.creator  = "Barcode Manager";
+    wb.created  = new Date();
+    wb.modified = new Date();
+
+    const ws = wb.addWorksheet("Dữ liệu Barcode", {
+      views:     [{ state: "frozen", ySplit: 1 }],
+      pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true }
+    });
+
+    // ── Column definitions ───────────────────────────────
+    ws.columns = [
+      { header: "Barcode",         key: "barcode",  width: 22 },
+      { header: "Tên sản phẩm",   key: "name",     width: 30 },
+      { header: "Số lượng",        key: "qty",      width: 12 },
+      { header: "Ngày sản xuất",   key: "mfg",      width: 16 },
+      { header: "Hạn sử dụng",     key: "expiry",   width: 16 },
+      { header: "Trạng thái",      key: "status",   width: 16 },
+      { header: "Ghi chú",         key: "note",     width: 30 },
+      { header: "Thời gian tạo",   key: "created",  width: 22 },
+      { header: "Ảnh sản phẩm",    key: "photo",    width: 20 },
+    ];
+
+    // ── Header row style ─────────────────────────────────
+    const hdrRow = ws.getRow(1);
+    hdrRow.height = 30;
+    hdrRow.eachCell(cell => {
+      cell.fill      = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1A3F63" } };
+      cell.font      = { color: { argb: "FFFFFFFF" }, bold: true, size: 11, name: "Calibri" };
+      cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+      cell.border    = { bottom: { style: "medium", color: { argb: "FF2E75B6" } } };
+    });
+
+    // ── Fetch all photos up front ────────────────────────
+    const withPhotos = records.filter(r => r.hasPhoto);
+    const photos     = withPhotos.length
+      ? await fetchPhotos(withPhotos.map(r => r.id)) : {};
+
+    // ── Data rows ────────────────────────────────────────
+    for (let i = 0; i < records.length; i++) {
+      const r       = records[i];
+      const s       = stat(r);
+      const photo   = photos[r.id] || null;
+      const excelRN = i + 2; // Excel row number (header = row 1)
+
+      const row = ws.addRow({
+        barcode: r.barcode,
+        name:    r.name   || "",
+        qty:     r.qty,
+        mfg:     r.mfg   || "",
+        expiry:  r.expiry || "",
+        status:  s[0],
+        note:    r.note   || "",
+        created: r.createdAt
+          ? new Date(r.createdAt).toLocaleString("vi-VN") : "",
+        photo:   "" // image embedded via ws.addImage; cell left empty
+      });
+
+      row.height = photo ? 75 : 22;
+
+      // Base cell styles for this row
+      row.eachCell({ includeEmpty: true }, cell => {
+        cell.alignment = { vertical: "middle", wrapText: true };
+        cell.font      = { name: "Calibri", size: 10 };
+        cell.border    = {
+          top:    { style: "thin", color: { argb: "FFD0DCE8" } },
+          left:   { style: "thin", color: { argb: "FFD0DCE8" } },
+          bottom: { style: "thin", color: { argb: "FFD0DCE8" } },
+          right:  { style: "thin", color: { argb: "FFD0DCE8" } }
+        };
+        // Alternate row shading
+        if (i % 2 === 1) {
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF3F7FB" } };
+        }
+      });
+
+      // Qty — center align
+      row.getCell(3).alignment = { vertical: "middle", horizontal: "center" };
+
+      // Status cell — colour-coded by expiry state
+      const statusCell = row.getCell(6);
+      statusCell.alignment = { vertical: "middle", horizontal: "center" };
+      statusCell.font      = { name: "Calibri", size: 10, bold: true };
+      if (s[1] === "expired") {
+        statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFDE0DF" } };
+        statusCell.font = { ...statusCell.font, color: { argb: "FF7A1010" } };
+      } else if (s[1] === "soon") {
+        statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFCE4D6" } };
+        statusCell.font = { ...statusCell.font, color: { argb: "FF7A3010" } };
+      } else {
+        statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE2F0D9" } };
+        statusCell.font = { ...statusCell.font, color: { argb: "FF2A5219" } };
+      }
+
+      // ── Embed photo in column I (index 8, 0-based) ───
+      if (photo) {
+        const ext   = photo.startsWith("data:image/png") ? "png" : "jpeg";
+        const b64   = photo.split(",")[1];
+        const imgId = wb.addImage({ base64: b64, extension: ext });
+        // ExcelJS image coords: tl/br row/col are 0-indexed
+        // row 0 = header; first data row = index (excelRN - 1)
+        ws.addImage(imgId, {
+          tl:     { col: 8, row: excelRN - 1 },
+          br:     { col: 9, row: excelRN },
+          editAs: "oneCell"
+        });
+      }
+    }
+
+    // ── Write buffer & trigger download ──────────────────
+    const buffer = await wb.xlsx.writeBuffer();
+    download(
+      new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }),
+      `barcode_${fmtDate()}.xlsx`
+    );
+    showMsg("✅ Xuất Excel thành công!", true);
+
+  } catch(err) {
+    console.error("XLSX export error:", err);
+    showMsg("❌ Lỗi xuất Excel: " + err.message, false);
+  } finally {
+    $("xlsxBtn").disabled    = false;
+    $("xlsxBtn").textContent = "📊 Xuất Excel (có ảnh)";
+  }
+};
+
+
+// ════════════════════════════════════════════════════════════
+// 12. BACKUP / RESTORE JSON
+//     Backup includes photos so the .json is self-contained
+// ════════════════════════════════════════════════════════════
+$("jsonBtn").onclick = async () => {
+  $("jsonBtn").disabled  = true;
+  $("jsonBtn").innerHTML = '<span class="spinner spinner-dark"></span>Đang sao lưu...';
+  try {
+    const withPhotos = records.filter(r => r.hasPhoto);
+    const photos     = withPhotos.length
+      ? await fetchPhotos(withPhotos.map(r => r.id)) : {};
+    const backup = {
+      version:    3,
+      exportedAt: new Date().toISOString(),
+      records,
+      photos // base64 photos included for portability
+    };
+    download(
+      new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }),
+      `barcode_backup_${fmtDate()}.json`
+    );
+    showMsg("✅ Sao lưu thành công!", true);
+  } catch(err) {
+    showMsg("❌ Lỗi sao lưu: " + err.message, false);
+  } finally {
+    $("jsonBtn").disabled    = false;
+    $("jsonBtn").textContent = "💾 Sao lưu JSON";
+  }
+};
+
 $("restoreBtn").onclick = () => $("restoreInput").click();
-$("restoreInput").onchange = e => {
-  let f = e.target.files[0]; if(!f) return;
-  let r = new FileReader();
-  r.onload = () => {
-    try { records = JSON.parse(r.result); store(); alert("Đã khôi phục thành công."); }
-    catch(_) { alert("File không hợp lệ."); }
-  };
-  r.readAsText(f);
+
+$("restoreInput").onchange = async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // FIX: confirm before overwriting
+  if (!confirm(
+    `Khôi phục sẽ GHI ĐÈ toàn bộ ${records.length} bản ghi hiện tại.\nBạn chắc chắn muốn tiếp tục?`
+  )) { e.target.value = ""; return; }
+
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+
+    if (Array.isArray(data)) {
+      // Legacy v1/v2 — photos were stored directly on records
+      const migrated = [];
+      for (const r of data) {
+        const id = r.id || genId();
+        if (r.photo) {
+          await savePhotoDB(id, r.photo);
+          photoCache.set(id, r.photo);
+        }
+        migrated.push({
+          id,
+          barcode:   r.barcode  || "",
+          name:      r.name     || "",
+          qty:       r.qty      || 1,
+          mfg:       r.mfg      || "",
+          expiry:    r.expiry   || "",
+          note:      r.note     || "",
+          hasPhoto:  !!r.photo,
+          createdAt: r.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+      }
+      records = migrated;
+    } else {
+      // v3 format
+      records = data.records || [];
+      const photos = data.photos || {};
+      for (const [id, url] of Object.entries(photos)) {
+        await savePhotoDB(id, url);
+        photoCache.set(id, url);
+      }
+    }
+
+    storeRecords();
+    await render();
+    showMsg(`✅ Khôi phục thành công! ${records.length} bản ghi.`, true);
+  } catch(err) {
+    showMsg("⚠️ File không hợp lệ: " + err.message, false);
+  } finally {
+    e.target.value = "";
+  }
 };
 
-render();
+
+// ════════════════════════════════════════════════════════════
+// 13. INIT — auto-migrates v2 localStorage → v3 (IndexedDB)
+// ════════════════════════════════════════════════════════════
+async function init() {
+  const oldRaw = localStorage.getItem(LS_KEY_V2);
+  const newRaw = localStorage.getItem(LS_KEY);
+
+  if (oldRaw && !newRaw) {
+    // One-time migration from v2
+    try {
+      const oldRecs  = JSON.parse(oldRaw);
+      const migrated = [];
+      for (const r of oldRecs) {
+        const id = genId();
+        if (r.photo) {
+          await savePhotoDB(id, r.photo);
+          photoCache.set(id, r.photo);
+        }
+        migrated.push({
+          id,
+          barcode:   r.barcode  || "",
+          name:      r.name     || "",
+          qty:       r.qty      || 1,
+          mfg:       r.mfg      || "",
+          expiry:    r.expiry   || "",
+          note:      r.note     || "",
+          hasPhoto:  !!r.photo,
+          createdAt: r.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+      }
+      records = migrated;
+      storeRecords();
+      showMsg(`✅ Đã chuyển ${records.length} bản ghi từ phiên bản cũ!`, true);
+    } catch(e) {
+      console.error("Migration failed:", e);
+      loadRecords();
+    }
+  } else {
+    loadRecords();
+  }
+
+  await render();
+}
+
+init();
 </script>
 </body>
 </html>
