@@ -75,7 +75,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 /* List items */
 .item{border:1.5px solid #e4ecf2;border-radius:14px;padding:13px;margin-top:9px;
-  background:#fff;transition:box-shadow .2s,border-color .2s}
+  background:#fff;transition:box-shadow .2s,border-color .2s;will-change:box-shadow}
 .item:hover{box-shadow:0 4px 16px rgba(31,78,120,.09);border-color:#c4d4e4}
 .item strong{display:block;font-size:15px;color:#17202a;margin-bottom:3px}
 .muted{font-size:12px;color:#68737d;margin-top:2px;line-height:1.6}
@@ -87,7 +87,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 /* Photo thumbnail */
 .photo-thumb{width:78px;height:78px;object-fit:cover;border-radius:9px;
-  margin-top:8px;display:block;border:1.5px solid #d8e5ef}
+  margin-top:8px;display:block;border:1.5px solid #d8e5ef;content-visibility:auto}
 
 /* Spinner */
 .spinner{display:inline-block;width:13px;height:13px;border:2.5px solid rgba(255,255,255,.35);
@@ -101,6 +101,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .mt8{margin-top:8px}
 .mt12{margin-top:12px}
 
+/* Pagination */
+.pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px;flex-wrap:wrap}
+.pag-btn{width:auto;padding:7px 13px;font-size:13px;border-radius:9px;background:#e4ecf2;color:#2c3e50;border:0;cursor:pointer;font-weight:700;transition:background .15s,transform .1s}
+.pag-btn:hover:not(:disabled){background:#d0dce8}
+.pag-btn.active{background:linear-gradient(135deg,#1f4e78,#2e75b6);color:#fff}
+.pag-btn:disabled{opacity:.4;cursor:not-allowed}
+.pag-info{font-size:12px;color:#68737d;font-weight:600;text-align:center;margin-top:6px}
+
 @media(max-width:480px){
   main{padding:8px}
   .row{grid-template-columns:1fr}
@@ -112,8 +120,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <body>
 
 <header>
-  <h1>📦 Quản lý Barcode</h1>
-  <div class="sub">Camera · Barcode · Số lượng · HSD · Ảnh sản phẩm</div>
+  <h1>&#128230; Qu&#7843;n l&#253; Barcode</h1>
+  <div class="sub">Camera &middot; Barcode &middot; S&#7889; l&#432;&#7907;ng &middot; HSD &middot; &#7842;nh s&#7843;n ph&#7849;m</div>
 </header>
 
 <main>
@@ -121,81 +129,82 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <!-- Stats -->
   <section class="card">
     <div class="stats">
-      <div class="stat"><b id="totalRows">0</b><div class="slabel">Dòng</div></div>
-      <div class="stat"><b id="totalQty">0</b><div class="slabel">Tổng SL</div></div>
-      <div class="stat"><b id="expiredCount">0</b><div class="slabel">Hết hạn</div></div>
+      <div class="stat"><b id="totalRows">0</b><div class="slabel">D&ograve;ng</div></div>
+      <div class="stat"><b id="totalQty">0</b><div class="slabel">T&#7893;ng SL</div></div>
+      <div class="stat"><b id="expiredCount">0</b><div class="slabel">H&#7871;t h&#7841;n</div></div>
     </div>
   </section>
 
   <!-- Scanner -->
   <section class="card">
-    <button class="btn-primary" id="scanBtn">📷 Bắt đầu quét Barcode</button>
+    <button class="btn-primary" id="scanBtn">&#128247; B&#7855;t &#273;&#7847;u qu&#233;t Barcode</button>
     <div id="reader" class="hidden"></div>
     <div class="actions mt8">
-      <button class="btn-gray hidden" id="stopBtn">⏹ Dừng quét</button>
-      <button class="btn-gray" id="manualBtn">⌨️ Nhập thủ công</button>
+      <button class="btn-gray hidden" id="stopBtn">&#9209; D&#7915;ng qu&#233;t</button>
+      <button class="btn-gray" id="manualBtn">&#9000;&#65039; Nh&#7853;p th&#7911; c&ocirc;ng</button>
     </div>
-    <div class="status" id="scanStatus">Sẵn sàng. Bấm nút để mở camera.</div>
+    <div class="status" id="scanStatus">S&#7861;n s&agrave;ng. B&#7845;m n&uacute;t &#273;&#7875; m&#7903; camera.</div>
   </section>
 
   <!-- Form -->
   <section class="card" id="formCard">
-    <div id="editBanner" class="edit-banner hidden">✏️ Đang chỉnh sửa — bấm Cập nhật để lưu</div>
+    <div id="editBanner" class="edit-banner hidden">&#9999;&#65039; &#272;ang ch&#7881;nh s&#7917;a &mdash; b&#7845;m C&#7853;p nh&#7853;t &#273;&#7875; l&#432;u</div>
 
     <label>Barcode *</label>
     <input id="barcode" type="text" inputmode="numeric" autocomplete="off"
-           placeholder="Barcode tự điền hoặc nhập tay">
+           placeholder="Barcode t&#7921; &#273;i&#7873;n ho&#7863;c nh&#7853;p tay">
 
-    <label>Tên sản phẩm</label>
-    <input id="pName" type="text" placeholder="Tên sản phẩm">
+    <label>T&ecirc;n s&#7843;n ph&#7849;m</label>
+    <input id="pName" type="text" placeholder="T&ecirc;n s&#7843;n ph&#7849;m">
 
     <div class="row">
       <div>
-        <label>Số lượng *</label>
+        <label>S&#7889; l&#432;&#7907;ng *</label>
         <input id="qty" type="number" inputmode="numeric" min="1" value="1">
       </div>
       <div>
-        <label>Hạn sử dụng *</label>
+        <label>H&#7841;n s&#7917; d&#7909;ng *</label>
         <input id="expiry" type="date">
       </div>
     </div>
 
-    <label>Ngày sản xuất</label>
+    <label>Ng&agrave;y s&#7843;n xu&#7845;t</label>
     <input id="mfg" type="date">
 
-    <label>Ảnh sản phẩm</label>
+    <label>&#7842;nh s&#7843;n ph&#7849;m</label>
     <input id="photoInput" type="file" accept="image/*" capture="environment">
     <div id="photoPreviewWrap" class="preview-wrap hidden">
-      <img id="photoPreview" class="preview-img" src="" alt="Xem trước ảnh">
-      <button class="btn-remove-photo mt8" id="removePhotoBtn">🗑 Xóa ảnh</button>
+      <img id="photoPreview" class="preview-img" src="" alt="Xem tr&#432;&#7899;c &#7843;nh">
+      <button class="btn-remove-photo mt8" id="removePhotoBtn">&#128465; X&oacute;a &#7843;nh</button>
     </div>
 
-    <label>Ghi chú</label>
-    <textarea id="note" rows="2" placeholder="Ghi chú thêm..."></textarea>
+    <label>Ghi ch&uacute;</label>
+    <textarea id="note" rows="2" placeholder="Ghi ch&uacute; th&ecirc;m..."></textarea>
 
     <div class="actions mt12">
-      <button class="btn-green" id="saveBtn">💾 Lưu</button>
-      <button class="btn-orange" id="clearBtn">🧹 Xóa form</button>
+      <button class="btn-green" id="saveBtn">&#128190; L&#432;u</button>
+      <button class="btn-orange" id="clearBtn">&#129529; X&oacute;a form</button>
     </div>
   </section>
 
   <!-- List & Export -->
   <section class="card">
-    <label>🔍 Tìm kiếm</label>
-    <input id="search" type="text" placeholder="Barcode hoặc tên sản phẩm...">
+    <label>&#128269; T&igrave;m ki&#7871;m</label>
+    <input id="search" type="text" placeholder="Barcode ho&#7863;c t&ecirc;n s&#7843;n ph&#7849;m...">
     <div id="list"></div>
+    <div id="pagination"></div>
 
     <div class="row mt12">
-      <button class="btn-excel" id="xlsxBtn">📊 Xuất Excel (có ảnh)</button>
-      <button class="btn-csv"   id="csvBtn">📄 Xuất CSV</button>
+      <button class="btn-excel" id="xlsxBtn">&#128202; Xu&#7845;t Excel (c&oacute; &#7843;nh)</button>
+      <button class="btn-csv"   id="csvBtn">&#128196; Xu&#7845;t CSV</button>
     </div>
     <div class="row mt8">
-      <button class="btn-backup"  id="jsonBtn">💾 Sao lưu JSON</button>
-      <button class="btn-restore" id="restoreBtn">♻️ Khôi phục</button>
+      <button class="btn-backup"  id="jsonBtn">&#128190; Sao l&#432;u JSON</button>
+      <button class="btn-restore" id="restoreBtn">&#9851;&#65039; Kh&ocirc;i ph&#7909;c</button>
     </div>
     <input id="restoreInput" type="file" accept=".json" class="hidden">
     <hr style="border:0;border-top:1.5px dashed #e4ecf2;margin:14px 0">
-    <button class="btn-danger" id="resetBtn">🗑 Xóa toàn bộ dữ liệu</button>
+    <button class="btn-danger" id="resetBtn">&#128465; X&oacute;a to&agrave;n b&#7897; d&#7919; li&#7879;u</button>
   </section>
 
 </main>
@@ -213,10 +222,45 @@ let records      = [];     // metadata only — no photo blobs here
 let html5QrCode  = null;   // scanner instance
 let isStarting   = false;  // race-condition guard for startScan()
 let photoData    = "";     // base64 of current form photo (or "" if none)
-let photoRemoved = false;  // true when user explicitly clicked "Xóa ảnh"
+let photoRemoved = false;  // true when user explicitly clicked "Xoa anh"
 let editingId    = "";     // UUID of record being edited ("" = creating new)
 
-const photoCache = new Map(); // in-memory cache: id → dataUrl
+// ── Incremental stats cache — avoid full-scan on every render ──
+// Set dirty=true whenever records change; recalculated lazily in getStats()
+let _statsCache = { total: 0, qty: 0, expired: 0, dirty: true };
+
+// ── Filter result cache — avoid re-filtering on every keystroke ──
+// Set dirty=true when records change; q tracks last search string
+let _filterCache = { q: null, result: null, dirty: true };
+
+// ── RAF render dedup — collapse multiple rapid scheduleRender() calls ──
+let _renderPending   = false;
+let _renderResetPage = false;
+
+// LRU photo cache — evicts oldest when > MAX_CACHE entries
+// Prevents RAM from growing unbounded with 1000+ photos
+const MAX_CACHE  = 80;
+const photoCache = new Map(); // id → dataUrl  (insertion-order = LRU)
+
+function cacheSet(id, url) {
+  if (photoCache.has(id)) photoCache.delete(id); // refresh position
+  photoCache.set(id, url);
+  if (photoCache.size > MAX_CACHE) photoCache.delete(photoCache.keys().next().value);
+}
+
+function cacheGet(id) {
+  if (!photoCache.has(id)) return undefined;
+  const url = photoCache.get(id);
+  photoCache.delete(id); // move to end (most-recently-used)
+  photoCache.set(id, url);
+  return url;
+}
+
+// Pagination state
+const PAGE_SIZE = 50;
+let currentPage   = 1;
+let filteredTotal = 0;
+
 const $ = id => document.getElementById(id);
 
 
@@ -244,14 +288,25 @@ const savePhotoDB = (id, url) => idbOp("readwrite", s => s.put(url, id));
 const getPhotoDB  = id        => idbOp("readonly",  s => s.get(id));
 const delPhotoDB  = id        => idbOp("readwrite", s => s.delete(id));
 
+// Fetch multiple photos in PARALLEL (not sequential await-in-loop)
 async function fetchPhotos(ids) {
   const result = {};
   await Promise.all(ids.map(async id => {
-    if (photoCache.has(id)) { result[id] = photoCache.get(id); return; }
+    const cached = cacheGet(id);
+    if (cached) { result[id] = cached; return; }
     const url = await getPhotoDB(id);
-    if (url) { photoCache.set(id, url); result[id] = url; }
+    if (url) { cacheSet(id, url); result[id] = url; }
   }));
   return result;
+}
+
+// Write photos in parallel batches of N (avoids overloading IDB with 1000+ writes)
+async function batchSavePhotos(entries, batchSize = 20) {
+  for (let i = 0; i < entries.length; i += batchSize) {
+    await Promise.all(
+      entries.slice(i, i + batchSize).map(([id, url]) => savePhotoDB(id, url))
+    );
+  }
 }
 
 
@@ -261,16 +316,66 @@ async function fetchPhotos(ids) {
 function loadRecords() {
   try { records = JSON.parse(localStorage.getItem(LS_KEY) || "[]"); }
   catch { records = []; }
+  invalidateAll();
 }
 
+// Defer localStorage write off the critical render path via microtask
+// Prevents JSON.stringify(1000 records) from blocking the UI thread
+let _storePending = false;
 function storeRecords() {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(records)); }
-  catch(e) { alert("Lỗi lưu dữ liệu: " + e.message); }
+  if (_storePending) return;
+  _storePending = true;
+  queueMicrotask(() => {
+    _storePending = false;
+    try { localStorage.setItem(LS_KEY, JSON.stringify(records)); }
+    catch(e) { alert("Loi luu du lieu: " + e.message); }
+  });
 }
 
 
 // ════════════════════════════════════════════════════════════
-// 4. UTILITIES
+// 4. CACHE INVALIDATION HELPERS
+// ════════════════════════════════════════════════════════════
+function invalidateAll() {
+  _statsCache.dirty  = true;
+  _filterCache.dirty = true;
+}
+
+function invalidateFilter() {
+  // Called on search input — stats don't need recalculation
+  _filterCache.dirty = true;
+}
+
+// Compute stats only once per data change (O(n) single pass)
+function getStats() {
+  if (!_statsCache.dirty) return _statsCache;
+  let qty = 0, expired = 0;
+  const today = new Date();
+  for (const r of records) {
+    qty += Number(r.qty || 0);
+    if (r.expiry) {
+      const days = Math.ceil((new Date(r.expiry + "T23:59:59") - today) / 86400000);
+      if (days < 0) expired++;
+    }
+  }
+  _statsCache = { total: records.length, qty, expired, dirty: false };
+  return _statsCache;
+}
+
+// Compute filtered list only when query or data changes
+function getFiltered(q) {
+  if (!_filterCache.dirty && _filterCache.q === q) return _filterCache.result;
+  const lq     = q.toLowerCase();
+  const result = lq
+    ? records.filter(r => (r.barcode + " " + (r.name || "")).toLowerCase().includes(lq)).slice().reverse()
+    : records.slice().reverse();
+  _filterCache = { q, result, dirty: false };
+  return result;
+}
+
+
+// ════════════════════════════════════════════════════════════
+// 5. UTILITIES
 // ════════════════════════════════════════════════════════════
 function genId() {
   return typeof crypto.randomUUID === "function"
@@ -291,11 +396,11 @@ function showMsg(msg, ok = true) {
 }
 
 function stat(r) {
-  if (!r.expiry) return ["CÒN HẠN", "ok"];
+  if (!r.expiry) return ["CON HAN", "ok"];
   const days = Math.ceil((new Date(r.expiry + "T23:59:59") - new Date()) / 86400000);
-  if (days < 0)  return ["ĐÃ HẾT HẠN", "expired"];
-  if (days <= 7) return ["SẮP HẾT HẠN", "soon"];
-  return ["CÒN HẠN", "ok"];
+  if (days < 0)  return ["DA HET HAN", "expired"];
+  if (days <= 7) return ["SAP HET HAN", "soon"];
+  return ["CON HAN", "ok"];
 }
 
 function debounce(fn, ms) {
@@ -328,7 +433,7 @@ function download(blob, name) {
   a.href     = URL.createObjectURL(blob);
   a.download = name;
   a.click();
-  // Revoke after click event completes (safer than setTimeout 1000)
+  // Revoke after click event completes
   requestAnimationFrame(() => URL.revokeObjectURL(a.href));
 }
 
@@ -338,57 +443,142 @@ function fmtDate() {
 
 
 // ════════════════════════════════════════════════════════════
-// 5. RENDER — fast skeleton, then lazy-load photos
+// 6. RENDER — cached stats+filter, paginated, RAF-deduped
 // ════════════════════════════════════════════════════════════
-async function render() {
-  $("totalRows").textContent    = records.length;
-  $("totalQty").textContent     = records.reduce((a, r) => a + Number(r.qty || 0), 0);
-  $("expiredCount").textContent = records.filter(r => stat(r)[0] === "ĐÃ HẾT HẠN").length;
 
-  const q = ($("search").value || "").toLowerCase();
-  const filtered = records
-    .filter(r => (r.barcode + " " + (r.name || "")).toLowerCase().includes(q))
-    .slice()
-    .reverse();
+// scheduleRender() collapses multiple rapid calls into ONE requestAnimationFrame.
+// Call this from event handlers; use render() directly only when you need to await.
+function scheduleRender(resetPage = false) {
+  if (resetPage) _renderResetPage = true;
+  if (_renderPending) return;   // already queued — flag above is enough
+  _renderPending = true;
+  requestAnimationFrame(() => {
+    _renderPending    = false;
+    const doReset     = _renderResetPage;
+    _renderResetPage  = false;
+    _doRender(doReset);
+  });
+}
 
-  if (!filtered.length) {
+async function _doRender(resetPage = false) {
+  // ── Stats (cached — O(n) only when dirty) ──────────────
+  const s = getStats();
+  $("totalRows").textContent    = s.total;
+  $("totalQty").textContent     = s.qty;
+  $("expiredCount").textContent = s.expired;
+
+  // ── Filter (cached — only recomputes when query/data changed) ──
+  const q        = ($("search").value || "").toLowerCase();
+  const filtered = getFiltered(q);
+
+  filteredTotal = filtered.length;
+
+  if (!filteredTotal) {
     $("list").innerHTML = `<div class="muted" style="padding:14px 0 4px;text-align:center">
-      Chưa có dữ liệu. Quét hoặc nhập barcode để bắt đầu.</div>`;
+      Chua co du lieu. Quet hoac nhap barcode de bat dau.</div>`;
+    renderPagination(0);
     return;
   }
 
-  // Render without photos first (instant)
-  $("list").innerHTML = filtered.map(r => {
-    const s      = stat(r);
+  // Reset to page 1 on new search or data change
+  if (resetPage) currentPage = 1;
+  const totalPages = Math.ceil(filteredTotal / PAGE_SIZE);
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  // Slice current page (max PAGE_SIZE items, not all 1000+)
+  const start     = (currentPage - 1) * PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + PAGE_SIZE);
+
+  // Build full HTML string first, then ONE innerHTML assignment (one reflow)
+  const parts = new Array(pageItems.length);
+  for (let i = 0; i < pageItems.length; i++) {
+    const r      = pageItems[i];
+    const st     = stat(r);
     const safeId = esc(r.id);
-    return `<div class="item">
-      <strong>${esc(r.name || "Chưa đặt tên")}</strong>
-      <div class="muted">🔖 <b>${esc(r.barcode)}</b> &nbsp;·&nbsp; SL: <b>${esc(r.qty)}</b> &nbsp;·&nbsp; HSD: ${esc(r.expiry || "—")}</div>
-      ${r.mfg  ? `<div class="muted">🏭 NSX: ${esc(r.mfg)}</div>` : ""}
-      ${r.note ? `<div class="muted">📝 ${esc(r.note)}</div>`     : ""}
-      <span class="badge ${s[1]}">${s[0]}</span>
-      ${r.hasPhoto ? `<img id="img_${safeId}" class="photo-thumb" src="" alt="ảnh">` : ""}
+    parts[i] = `<div class="item">
+      <strong>${esc(r.name || "Chua dat ten")}</strong>
+      <div class="muted">&#128278; <b>${esc(r.barcode)}</b> &nbsp;&middot;&nbsp; SL: <b>${esc(r.qty)}</b> &nbsp;&middot;&nbsp; HSD: ${esc(r.expiry || "&#8212;")}</div>
+      ${r.mfg  ? `<div class="muted">&#127981; NSX: ${esc(r.mfg)}</div>` : ""}
+      ${r.note ? `<div class="muted">&#128221; ${esc(r.note)}</div>`     : ""}
+      <span class="badge ${st[1]}">${st[0]}</span>
+      ${r.hasPhoto ? `<img id="img_${safeId}" class="photo-thumb" src="" alt="anh" loading="lazy" decoding="async">` : ""}
       <div class="actions" style="margin-top:9px">
-        <button class="btn-gray" onclick="editR('${safeId}')">✏️ Sửa</button>
-        <button class="btn-gray" onclick="delR('${safeId}')">🗑 Xóa</button>
+        <button class="btn-gray" onclick="editR('${safeId}')">&#9999;&#65039; Sua</button>
+        <button class="btn-gray" onclick="delR('${safeId}')">&#128465; Xoa</button>
       </div>
     </div>`;
-  }).join("");
+  }
+  $("list").innerHTML = parts.join(""); // single DOM write — one reflow
 
-  // Lazy-load photos from IndexedDB asynchronously
-  const withPhotos = filtered.filter(r => r.hasPhoto);
+  renderPagination(totalPages);
+
+  // Lazy-load photos for this page only (max PAGE_SIZE, not 1000+)
+  const withPhotos = pageItems.filter(r => r.hasPhoto);
   if (withPhotos.length) {
-    const photos = await fetchPhotos(withPhotos.map(r => r.id));
-    for (const [id, url] of Object.entries(photos)) {
-      const el = document.getElementById("img_" + id);
-      if (el) el.src = url;
+    const photos = await fetchPhotos(withPhotos.map(r => r.id)); // parallel IDB reads
+    // Batch DOM photo writes in one RAF after async fetch — no layout thrash
+    requestAnimationFrame(() => {
+      for (const [id, url] of Object.entries(photos)) {
+        const el = document.getElementById("img_" + id);
+        if (el) el.src = url;
+      }
+    });
+  }
+}
+
+// Public alias — kept for backward compat (called from goPage / init / save)
+async function render(resetPage = false) {
+  return _doRender(resetPage);
+}
+
+function renderPagination(totalPages) {
+  const el = $("pagination");
+  if (!el) return;
+  if (totalPages <= 1) { el.innerHTML = ""; return; }
+
+  const showing = Math.min(currentPage * PAGE_SIZE, filteredTotal);
+  const from    = (currentPage - 1) * PAGE_SIZE + 1;
+
+  // Show max 5 page numbers around current
+  const pages = [];
+  const delta = 2;
+  for (let p = 1; p <= totalPages; p++) {
+    if (p === 1 || p === totalPages || (p >= currentPage - delta && p <= currentPage + delta)) {
+      pages.push(p);
     }
   }
+  const withGaps = [];
+  let prev = 0;
+  for (const p of pages) {
+    if (prev && p - prev > 1) withGaps.push("...");
+    withGaps.push(p);
+    prev = p;
+  }
+
+  el.innerHTML = `
+    <div class="pagination">
+      <button class="pag-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? "disabled" : ""}>&#9664;</button>
+      ${withGaps.map(p => p === "..."
+        ? `<span style="color:#aaa;padding:0 2px">&#8230;</span>`
+        : `<button class="pag-btn ${p === currentPage ? "active" : ""}" onclick="goPage(${p})">${p}</button>`
+      ).join("")}
+      <button class="pag-btn" onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? "disabled" : ""}>&#9654;</button>
+    </div>
+    <div class="pag-info">${from}&ndash;${showing} / ${filteredTotal} ban ghi &nbsp;&middot;&nbsp; Trang ${currentPage}/${totalPages}</div>
+  `;
+}
+
+async function goPage(p) {
+  const totalPages = Math.ceil(filteredTotal / PAGE_SIZE);
+  if (p < 1 || p > totalPages) return;
+  currentPage = p;
+  await render();
+  $("search").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 
 // ════════════════════════════════════════════════════════════
-// 6. FORM — clear / edit / delete
+// 7. FORM — clear / edit / delete
 // ════════════════════════════════════════════════════════════
 function clearForm() {
   ["barcode","pName","mfg","expiry","note"].forEach(id => $(id).value = "");
@@ -400,14 +590,14 @@ function clearForm() {
   $("photoPreview").src = "";
   $("photoPreviewWrap").classList.add("hidden");
   $("editBanner").classList.add("hidden");
-  $("saveBtn").textContent = "💾 Lưu";
+  $("saveBtn").textContent = "&#128190; Luu";
 }
 
 async function editR(id) {
   const r = records.find(x => x.id === id);
   if (!r) return;
 
-  // FIX: populate form WITHOUT removing record from array
+  // Populate form WITHOUT removing record from array
   editingId          = id;
   $("barcode").value = r.barcode;
   $("pName").value   = r.name    || "";
@@ -417,7 +607,7 @@ async function editR(id) {
   $("note").value    = r.note   || "";
 
   $("editBanner").classList.remove("hidden");
-  $("saveBtn").textContent = "✅ Cập nhật";
+  $("saveBtn").textContent = "&#9989; Cap nhat";
 
   photoData    = "";
   photoRemoved = false;
@@ -433,21 +623,22 @@ async function editR(id) {
   }
 
   scrollTo({ top: 0, behavior: "smooth" });
-  showMsg("Đang chỉnh sửa: " + (r.name || r.barcode), true);
+  showMsg("Dang chinh sua: " + (r.name || r.barcode), true);
 }
 
 async function delR(id) {
-  if (!confirm("Xóa bản ghi này?")) return;
+  if (!confirm("Xoa ban ghi nay?")) return;
   records = records.filter(r => r.id !== id);
   await delPhotoDB(id).catch(() => {});
   photoCache.delete(id);
+  invalidateAll();
   storeRecords();
-  await render();
+  scheduleRender(); // RAF-deduped, non-blocking
 }
 
 
 // ════════════════════════════════════════════════════════════
-// 7. SAVE / UPDATE
+// 8. SAVE / UPDATE
 // ════════════════════════════════════════════════════════════
 $("saveBtn").onclick = async () => {
   const barcode = ($("barcode").value || "").trim();
@@ -455,27 +646,25 @@ $("saveBtn").onclick = async () => {
   const expiry  = $("expiry").value;
   const mfg     = $("mfg").value;
 
-  // Validation
   if (!barcode) {
-    showMsg("⚠️ Nhập hoặc quét Barcode trước!", false);
+    showMsg("Nhap hoac quet Barcode truoc!", false);
     $("barcode").focus(); return;
   }
   if (!qty || qty < 1) {
-    showMsg("⚠️ Số lượng phải lớn hơn 0!", false); return;
+    showMsg("So luong phai lon hon 0!", false); return;
   }
   if (!expiry) {
-    showMsg("⚠️ Chọn Hạn sử dụng!", false);
+    showMsg("Chon Han su dung!", false);
     $("expiry").focus(); return;
   }
-  // FIX: validate mfg <= expiry
   if (mfg && expiry && mfg > expiry) {
-    showMsg("⚠️ Ngày sản xuất không thể sau Hạn sử dụng!", false); return;
+    showMsg("Ngay san xuat khong the sau Han su dung!", false); return;
   }
 
   stopScan();
   const origLabel       = $("saveBtn").textContent;
   $("saveBtn").disabled = true;
-  $("saveBtn").innerHTML = '<span class="spinner"></span>Đang lưu...';
+  $("saveBtn").innerHTML = '<span class="spinner"></span>Dang luu...';
 
   try {
     const isEdit   = !!editingId;
@@ -492,7 +681,7 @@ $("saveBtn").onclick = async () => {
       // Save photo (new upload or existing loaded into photoData)
       hasPhoto = true;
       await savePhotoDB(id, photoData);
-      photoCache.set(id, photoData);
+      cacheSet(id, photoData); // LRU cache
     } else {
       // No change to photo state
       hasPhoto = isEdit ? (existing?.hasPhoto || false) : false;
@@ -517,24 +706,25 @@ $("saveBtn").onclick = async () => {
       records.push(rec);
     }
 
-    storeRecords();
+    invalidateAll();    // mark both caches dirty
+    storeRecords();     // deferred via queueMicrotask — does not block paint
     clearForm();
     await render();
-    showMsg(isEdit ? "✅ Cập nhật thành công!" : "✅ Đã lưu! Bấm quét để tiếp tục.", true);
+    showMsg(isEdit ? "Cap nhat thanh cong!" : "Da luu! Bam quet de tiep tuc.", true);
   } catch(err) {
     console.error("Save error:", err);
-    showMsg("❌ Lỗi khi lưu: " + err.message, false);
+    showMsg("Loi khi luu: " + err.message, false);
   } finally {
     $("saveBtn").disabled    = false;
     $("saveBtn").textContent = origLabel;
   }
 };
 
-$("clearBtn").onclick = () => { clearForm(); showMsg("Đã xóa form."); };
+$("clearBtn").onclick = () => { clearForm(); showMsg("Da xoa form."); };
 
 
 // ════════════════════════════════════════════════════════════
-// 8. PHOTO HANDLING
+// 9. PHOTO HANDLING
 // ════════════════════════════════════════════════════════════
 $("photoInput").onchange = async e => {
   const file = e.target.files[0];
@@ -545,7 +735,7 @@ $("photoInput").onchange = async e => {
     $("photoPreview").src = photoData;
     $("photoPreviewWrap").classList.remove("hidden");
   } catch(err) {
-    showMsg("Lỗi xử lý ảnh: " + err.message, false);
+    showMsg("Loi xu ly anh: " + err.message, false);
   }
 };
 
@@ -559,19 +749,19 @@ $("removePhotoBtn").onclick = () => {
 
 
 // ════════════════════════════════════════════════════════════
-// 9. SCANNER — fixed lifecycle (no stale instance)
+// 10. SCANNER — fixed lifecycle (no stale instance)
 // ════════════════════════════════════════════════════════════
 async function startScan() {
-  if (isStarting) return; // FIX: race-condition guard
+  if (isStarting) return; // race-condition guard
 
   isStarting = true;
   $("scanBtn").disabled = true;
   $("stopBtn").classList.remove("hidden");
   $("reader").classList.remove("hidden");
-  showMsg("Đang kết nối camera...");
+  showMsg("Dang ket noi camera...");
 
   try {
-    // FIX: always create a fresh instance (old one may be in broken state)
+    // Always create a fresh instance (old one may be in broken state)
     html5QrCode = new Html5Qrcode("reader");
 
     await html5QrCode.start(
@@ -583,7 +773,7 @@ async function startScan() {
       },
       decodedText => {
         $("barcode").value = decodedText;
-        showMsg("✅ Đã nhận: " + decodedText, true);
+        showMsg("Da nhan: " + decodedText, true);
         navigator.vibrate?.(100);
         stopScan();
         $("expiry").focus();
@@ -591,13 +781,13 @@ async function startScan() {
       () => {} // Per-frame errors — suppress (normal during scanning)
     );
 
-    showMsg("Đưa barcode vào khung ngắm...");
+    showMsg("Dua barcode vao khung ngam...");
   } catch(err) {
     console.error("Camera error:", err);
-    showMsg("Không thể mở camera. Kiểm tra quyền camera trong trình duyệt.", false);
+    showMsg("Khong the mo camera. Kiem tra quyen camera trong trinh duyet.", false);
     await stopScan();
   } finally {
-    isStarting = false; // FIX: always release guard
+    isStarting = false; // always release guard
   }
 }
 
@@ -606,12 +796,12 @@ async function stopScan() {
     if (html5QrCode) {
       if (html5QrCode.isScanning) await html5QrCode.stop();
       html5QrCode.clear?.();
-      html5QrCode = null; // FIX: reset so next scan gets fresh instance
+      html5QrCode = null; // reset so next scan gets fresh instance
     }
   } catch(e) {
     html5QrCode = null;
   } finally {
-    // FIX: cleanup always runs, even if stop() throws
+    // Cleanup always runs, even if stop() throws
     $("reader").classList.add("hidden");
     $("stopBtn").classList.add("hidden");
     $("scanBtn").disabled = false;
@@ -622,17 +812,20 @@ $("scanBtn").onclick   = startScan;
 $("stopBtn").onclick   = stopScan;
 $("manualBtn").onclick = () => { stopScan(); $("barcode").focus(); };
 
-// FIX: debounce search to avoid thrashing on every keystroke
-$("search").oninput = debounce(render, 220);
+// Debounced search — 300 ms, only dirties filter cache (not stats)
+$("search").oninput = debounce(() => {
+  invalidateFilter();
+  scheduleRender(true); // reset to page 1, RAF-deduped
+}, 300);
 
 
 // ════════════════════════════════════════════════════════════
-// 10. EXPORT CSV
+// 11. EXPORT CSV
 // ════════════════════════════════════════════════════════════
 $("csvBtn").onclick = () => {
   const headers = [
-    "Barcode","Tên sản phẩm","Số lượng","Ngày sản xuất",
-    "Hạn sử dụng","Trạng thái","Ghi chú","Thời gian tạo"
+    "Barcode","Ten san pham","So luong","Ngay san xuat",
+    "Han su dung","Trang thai","Ghi chu","Thoi gian tao"
   ];
   const rows = records.map(r => {
     const s = stat(r);
@@ -642,12 +835,12 @@ $("csvBtn").onclick = () => {
     .map(row => row.map(v => `"${String(v ?? "").replaceAll('"','""')}"`).join(","))
     .join("\n");
   download(new Blob([csv], { type: "text/csv;charset=utf-8" }), `barcode_${fmtDate()}.csv`);
-  showMsg("✅ Xuất CSV thành công!", true);
+  showMsg("Xuat CSV thanh cong!", true);
 };
 
 
 // ════════════════════════════════════════════════════════════
-// 11. EXPORT XLSX with embedded photos  (ExcelJS, lazy-loaded)
+// 12. EXPORT XLSX with embedded photos  (ExcelJS, lazy-loaded)
 // ════════════════════════════════════════════════════════════
 let _excelJSLoaded = false;
 function loadExcelJS() {
@@ -659,42 +852,42 @@ function loadExcelJS() {
     const s   = document.createElement("script");
     s.src     = "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js";
     s.onload  = () => { _excelJSLoaded = true; resolve(); };
-    s.onerror = () => reject(new Error("Không tải được ExcelJS. Kiểm tra kết nối mạng."));
+    s.onerror = () => reject(new Error("Khong tai duoc ExcelJS. Kiem tra ket noi mang."));
     document.head.appendChild(s);
   });
 }
 
 $("xlsxBtn").onclick = async () => {
-  if (!records.length) { showMsg("Chưa có dữ liệu để xuất!", false); return; }
+  if (!records.length) { showMsg("Chua co du lieu de xuat!", false); return; }
 
   $("xlsxBtn").disabled  = true;
-  $("xlsxBtn").innerHTML = '<span class="spinner"></span>Đang tải thư viện...';
+  $("xlsxBtn").innerHTML = '<span class="spinner"></span>Dang tai thu vien...';
 
   try {
     await loadExcelJS();
-    $("xlsxBtn").innerHTML = '<span class="spinner"></span>Đang tạo file Excel...';
+    $("xlsxBtn").innerHTML = '<span class="spinner"></span>Dang tao file Excel...';
 
     const wb = new ExcelJS.Workbook();
     wb.creator  = "Barcode Manager";
     wb.created  = new Date();
     wb.modified = new Date();
 
-    const ws = wb.addWorksheet("Dữ liệu Barcode", {
+    const ws = wb.addWorksheet("Du lieu Barcode", {
       views:     [{ state: "frozen", ySplit: 1 }],
       pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true }
     });
 
     // ── Column definitions ───────────────────────────────
     ws.columns = [
-      { header: "Barcode",         key: "barcode",  width: 22 },
-      { header: "Tên sản phẩm",   key: "name",     width: 30 },
-      { header: "Số lượng",        key: "qty",      width: 12 },
-      { header: "Ngày sản xuất",   key: "mfg",      width: 16 },
-      { header: "Hạn sử dụng",     key: "expiry",   width: 16 },
-      { header: "Trạng thái",      key: "status",   width: 16 },
-      { header: "Ghi chú",         key: "note",     width: 30 },
-      { header: "Thời gian tạo",   key: "created",  width: 22 },
-      { header: "Ảnh sản phẩm",    key: "photo",    width: 20 },
+      { header: "Barcode",       key: "barcode",  width: 22 },
+      { header: "Ten san pham",  key: "name",     width: 30 },
+      { header: "So luong",      key: "qty",      width: 12 },
+      { header: "Ngay san xuat", key: "mfg",      width: 16 },
+      { header: "Han su dung",   key: "expiry",   width: 16 },
+      { header: "Trang thai",    key: "status",   width: 16 },
+      { header: "Ghi chu",       key: "note",     width: 30 },
+      { header: "Thoi gian tao", key: "created",  width: 22 },
+      { header: "Anh san pham",  key: "photo",    width: 20 },
     ];
 
     // ── Header row style ─────────────────────────────────
@@ -707,7 +900,7 @@ $("xlsxBtn").onclick = async () => {
       cell.border    = { bottom: { style: "medium", color: { argb: "FF2E75B6" } } };
     });
 
-    // ── Fetch all photos up front ────────────────────────
+    // ── Fetch all photos in parallel ─────────────────────
     const withPhotos = records.filter(r => r.hasPhoto);
     const photos     = withPhotos.length
       ? await fetchPhotos(withPhotos.map(r => r.id)) : {};
@@ -791,25 +984,25 @@ $("xlsxBtn").onclick = async () => {
       }),
       `barcode_${fmtDate()}.xlsx`
     );
-    showMsg("✅ Xuất Excel thành công!", true);
+    showMsg("Xuat Excel thanh cong!", true);
 
   } catch(err) {
     console.error("XLSX export error:", err);
-    showMsg("❌ Lỗi xuất Excel: " + err.message, false);
+    showMsg("Loi xuat Excel: " + err.message, false);
   } finally {
     $("xlsxBtn").disabled    = false;
-    $("xlsxBtn").textContent = "📊 Xuất Excel (có ảnh)";
+    $("xlsxBtn").textContent = "&#128202; Xuat Excel (co anh)";
   }
 };
 
 
 // ════════════════════════════════════════════════════════════
-// 12. BACKUP / RESTORE JSON
+// 13. BACKUP / RESTORE JSON
 //     Backup includes photos so the .json is self-contained
 // ════════════════════════════════════════════════════════════
 $("jsonBtn").onclick = async () => {
   $("jsonBtn").disabled  = true;
-  $("jsonBtn").innerHTML = '<span class="spinner spinner-dark"></span>Đang sao lưu...';
+  $("jsonBtn").innerHTML = '<span class="spinner spinner-dark"></span>Dang sao luu...';
   try {
     const withPhotos = records.filter(r => r.hasPhoto);
     const photos     = withPhotos.length
@@ -824,12 +1017,12 @@ $("jsonBtn").onclick = async () => {
       new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }),
       `barcode_backup_${fmtDate()}.json`
     );
-    showMsg("✅ Sao lưu thành công!", true);
+    showMsg("Sao luu thanh cong!", true);
   } catch(err) {
-    showMsg("❌ Lỗi sao lưu: " + err.message, false);
+    showMsg("Loi sao luu: " + err.message, false);
   } finally {
     $("jsonBtn").disabled    = false;
-    $("jsonBtn").textContent = "💾 Sao lưu JSON";
+    $("jsonBtn").textContent = "&#128190; Sao luu JSON";
   }
 };
 
@@ -839,10 +1032,12 @@ $("restoreInput").onchange = async e => {
   const file = e.target.files[0];
   if (!file) return;
 
-  // FIX: confirm before overwriting
   if (!confirm(
-    `Khôi phục sẽ GHI ĐÈ toàn bộ ${records.length} bản ghi hiện tại.\nBạn chắc chắn muốn tiếp tục?`
+    "Khoi phuc se GHI DE toan bo " + records.length + " ban ghi hien tai.\nBan chac chan muon tiep tuc?"
   )) { e.target.value = ""; return; }
+
+  $("restoreBtn").disabled  = true;
+  $("restoreBtn").innerHTML = '<span class="spinner spinner-dark"></span>Dang khoi phuc...';
 
   try {
     const text = await file.text();
@@ -850,12 +1045,13 @@ $("restoreInput").onchange = async e => {
 
     if (Array.isArray(data)) {
       // Legacy v1/v2 — photos were stored directly on records
-      const migrated = [];
+      const migrated     = [];
+      const photoEntries = [];
       for (const r of data) {
         const id = r.id || genId();
         if (r.photo) {
-          await savePhotoDB(id, r.photo);
-          photoCache.set(id, r.photo);
+          photoEntries.push([id, r.photo]);
+          cacheSet(id, r.photo); // populate cache immediately
         }
         migrated.push({
           id,
@@ -870,31 +1066,34 @@ $("restoreInput").onchange = async e => {
           updatedAt: new Date().toISOString()
         });
       }
+      // Write photos in parallel batches of 20 — NOT sequential await-in-loop
+      await batchSavePhotos(photoEntries);
       records = migrated;
     } else {
       // v3 format
       records = data.records || [];
-      const photos = data.photos || {};
-      for (const [id, url] of Object.entries(photos)) {
-        await savePhotoDB(id, url);
-        photoCache.set(id, url);
-      }
+      const photos       = data.photos || {};
+      const photoEntries = Object.entries(photos);
+      // Populate cache immediately → render shows photos without waiting for IDB
+      for (const [id, url] of photoEntries) cacheSet(id, url);
+      // Write to IDB in the background (non-blocking for UI)
+      batchSavePhotos(photoEntries).catch(console.error);
     }
 
+    invalidateAll();
     storeRecords();
     await render();
-    showMsg(`✅ Khôi phục thành công! ${records.length} bản ghi.`, true);
+    showMsg("Khoi phuc thanh cong! " + records.length + " ban ghi.", true);
   } catch(err) {
-    showMsg("⚠️ File không hợp lệ: " + err.message, false);
+    showMsg("File khong hop le: " + err.message, false);
   } finally {
     e.target.value = "";
+    $("restoreBtn").disabled    = false;
+    $("restoreBtn").textContent = "&#9851;&#65039; Khoi phuc";
   }
 };
 
 
-// ════════════════════════════════════════════════════════════
-// 13. INIT — auto-migrates v2 localStorage → v3 (IndexedDB)
-// ════════════════════════════════════════════════════════════
 // ════════════════════════════════════════════════════════════
 // 14. RESET ALL DATA
 // ════════════════════════════════════════════════════════════
@@ -902,33 +1101,38 @@ function clearAllPhotosDB() {
   return idbOp("readwrite", s => s.clear());
 }
 
-$('resetBtn').onclick = async () => {
+$("resetBtn").onclick = async () => {
   if (!records.length) {
-    showMsg("Không có dữ liệu để xóa.", false); return;
+    showMsg("Khong co du lieu de xoa.", false); return;
   }
   // Double-confirm to prevent accidents
-  if (!confirm(`⚠️ XÓA TOÀN BỘ ${records.length} bản ghi và tất cả ảnh?\n\nHành động này KHÔNG THỂ hoàn tác!`)) return;
-  if (!confirm("Xác nhận lần 2: Toàn bộ dữ liệu sẽ bị xóa vĩnh viễn. Tiếp tục?")) return;
+  if (!confirm("XOA TOAN BO " + records.length + " ban ghi va tat ca anh?\n\nHanh dong nay KHONG THE hoan tac!")) return;
+  if (!confirm("Xac nhan lan 2: Toan bo du lieu se bi xoa vinh vien. Tiep tuc?")) return;
 
-  $('resetBtn').disabled  = true;
-  $('resetBtn').innerHTML = '<span class="spinner"></span>Đang xóa...';
+  $("resetBtn").disabled  = true;
+  $("resetBtn").innerHTML = '<span class="spinner"></span>Dang xoa...';
 
   try {
     records = [];
     localStorage.removeItem(LS_KEY);
     await clearAllPhotosDB();
     photoCache.clear();
+    invalidateAll();
     clearForm();
     await render();
-    showMsg("🗑 Đã xóa toàn bộ dữ liệu!", true);
+    showMsg("Da xoa toan bo du lieu!", true);
   } catch(err) {
-    showMsg("❌ Lỗi reset: " + err.message, false);
+    showMsg("Loi reset: " + err.message, false);
   } finally {
-    $('resetBtn').disabled    = false;
-    $('resetBtn').textContent = "🗑 Xóa toàn bộ dữ liệu";
+    $("resetBtn").disabled    = false;
+    $("resetBtn").textContent = "&#128465; Xoa toan bo du lieu";
   }
 };
 
+
+// ════════════════════════════════════════════════════════════
+// 15. INIT — auto-migrates v2 localStorage → v3 (IndexedDB)
+// ════════════════════════════════════════════════════════════
 async function init() {
   const oldRaw = localStorage.getItem(LS_KEY_V2);
   const newRaw = localStorage.getItem(LS_KEY);
@@ -936,13 +1140,14 @@ async function init() {
   if (oldRaw && !newRaw) {
     // One-time migration from v2
     try {
-      const oldRecs  = JSON.parse(oldRaw);
-      const migrated = [];
+      const oldRecs      = JSON.parse(oldRaw);
+      const migrated     = [];
+      const photoEntries = [];
       for (const r of oldRecs) {
         const id = genId();
         if (r.photo) {
-          await savePhotoDB(id, r.photo);
-          photoCache.set(id, r.photo);
+          photoEntries.push([id, r.photo]);
+          cacheSet(id, r.photo);
         }
         migrated.push({
           id,
@@ -957,9 +1162,11 @@ async function init() {
           updatedAt: new Date().toISOString()
         });
       }
+      await batchSavePhotos(photoEntries); // parallel batch write
       records = migrated;
+      invalidateAll();
       storeRecords();
-      showMsg(`✅ Đã chuyển ${records.length} bản ghi từ phiên bản cũ!`, true);
+      showMsg("Da chuyen " + records.length + " ban ghi tu phien ban cu!", true);
     } catch(e) {
       console.error("Migration failed:", e);
       loadRecords();
