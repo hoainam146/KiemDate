@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1a3f63">
 <title>Quản lý Barcode Mobile</title>
-<meta name="description" content="Ứng dụng quản lý barcode sản phẩm, hạn sử dụng, ảnh chụp và xuất Excel.">
+<meta name="description" content="Ứng dụng quản lý barcode sản phẩm, hạn sử dụng, ảnh chụp và xuất/nhập Excel.">
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#f0f4f8;color:#17202a}
@@ -36,7 +36,7 @@ button{
 button:active:not(:disabled){opacity:.82;transform:scale(.97)}
 button:disabled{opacity:.45;cursor:not-allowed}
 .btn-primary{background:linear-gradient(135deg,#1f4e78,#2e75b6);color:#fff;box-shadow:0 4px 12px rgba(31,78,120,.32)}
-.btn-green{background:linear-gradient(135deg,#5a9e35,#70ad47);color:#fff;box-shadow:0 4px 10px rgba(112,173,71,.32)}
+.btn-green{background:linear-gradient(135deg,#439626,#58a336);color:#fff;box-shadow:0 4px 10px rgba(67,150,38,.32)}
 .btn-orange{background:#f0a070;color:#fff}
 .btn-gray{background:#e4ecf2;color:#2c3e50}
 .btn-excel{background:linear-gradient(135deg,#1a5c38,#217346);color:#fff;box-shadow:0 4px 10px rgba(33,115,70,.30)}
@@ -93,118 +93,123 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .spinner{display:inline-block;width:13px;height:13px;border:2.5px solid rgba(255,255,255,.35);
   border-top-color:#fff;border-radius:50%;animation:spin .55s linear infinite;
   vertical-align:middle;margin-right:5px}
-.spinner-dark{border-color:rgba(0,0,0,.15);border-top-color:#444}
-
+.spinner-dark{border-color:rgba(44,62,80,.25);border-top-color:#2c3e50}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-.hidden{display:none!important}
-.mt8{margin-top:8px}
-.mt12{margin-top:12px}
 
 /* Pagination */
 .pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px;flex-wrap:wrap}
-.pag-btn{width:auto;padding:7px 13px;font-size:13px;border-radius:9px;background:#e4ecf2;color:#2c3e50;border:0;cursor:pointer;font-weight:700;transition:background .15s,transform .1s}
-.pag-btn:hover:not(:disabled){background:#d0dce8}
-.pag-btn.active{background:linear-gradient(135deg,#1f4e78,#2e75b6);color:#fff}
-.pag-btn:disabled{opacity:.4;cursor:not-allowed}
-.pag-info{font-size:12px;color:#68737d;font-weight:600;text-align:center;margin-top:6px}
+.page-btn{min-width:36px;height:36px;padding:0 8px;border-radius:10px;font-size:13px;
+  font-weight:700;border:1.5px solid #d0dde8;background:#fff;color:#1f4e78;
+  cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
+.page-btn:hover:not(:disabled){background:#eef4fb;border-color:#2e75b6}
+.page-btn.active{background:linear-gradient(135deg,#1f4e78,#2e75b6);color:#fff;border-color:#1f4e78}
+.page-btn:disabled{opacity:.35;cursor:not-allowed}
+.page-info{font-size:12px;color:#5a7a98;font-weight:600;padding:0 4px}
 
-@media(max-width:480px){
-  main{padding:8px}
-  .row{grid-template-columns:1fr}
-  h1{font-size:18px}
-}
+/* Utilities */
+.hidden{display:none !important}
+.mt8{margin-top:8px}
+.mt12{margin-top:12px}
 </style>
+
+<!-- Html5Qrcode Scanner (loaded synchronously — needed right away for camera) -->
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
 
 <header>
-  <h1>&#128230; Qu&#7843;n l&#253; Barcode</h1>
-  <div class="sub">Camera &middot; Barcode &middot; S&#7889; l&#432;&#7907;ng &middot; HSD &middot; &#7842;nh s&#7843;n ph&#7849;m</div>
+  <h1>Quản lý Barcode Mobile</h1>
+  <div class="sub">Quét mã, lưu kho, gợi ý tên, ảnh chụp &amp; xuất/nhập Excel</div>
 </header>
 
 <main>
 
-  <!-- Stats -->
+  <!-- Summary Stats -->
   <section class="card">
     <div class="stats">
-      <div class="stat"><b id="totalRows">0</b><div class="slabel">D&ograve;ng</div></div>
-      <div class="stat"><b id="totalQty">0</b><div class="slabel">T&#7893;ng SL</div></div>
-      <div class="stat"><b id="expiredCount">0</b><div class="slabel">H&#7871;t h&#7841;n</div></div>
+      <div class="stat"><b id="totalRows">0</b><div class="slabel">Mặt hàng</div></div>
+      <div class="stat"><b id="totalQty">0</b><div class="slabel">Tổng SL</div></div>
+      <div class="stat"><b id="expiredCount" style="color:#c0392b">0</b><div class="slabel">Hết hạn</div></div>
     </div>
   </section>
 
   <!-- Scanner -->
   <section class="card">
-    <button class="btn-primary" id="scanBtn">&#128247; B&#7855;t &#273;&#7847;u qu&#233;t Barcode</button>
-    <div id="reader" class="hidden"></div>
-    <div class="actions mt8">
-      <button class="btn-gray hidden" id="stopBtn">&#9209; D&#7915;ng qu&#233;t</button>
-      <button class="btn-gray" id="manualBtn">&#9000;&#65039; Nh&#7853;p th&#7911; c&ocirc;ng</button>
+    <div class="actions">
+      <button class="btn-primary" id="scanBtn">&#128247; Quét mã Camera</button>
+      <button class="btn-gray"    id="manualBtn">&#9999;&#65039; Nhập Barcode tay</button>
     </div>
-    <div class="status" id="scanStatus">S&#7861;n s&agrave;ng. B&#7845;m n&uacute;t &#273;&#7875; m&#7903; camera.</div>
+    <div id="reader" class="hidden"></div>
+    <div class="mt8">
+      <button class="btn-orange hidden" id="stopBtn">&#9209; Dừng camera</button>
+    </div>
+    <div class="status" id="scanStatus">Sẵn sàng. Bấm nút để mở camera.</div>
   </section>
 
   <!-- Form -->
   <section class="card" id="formCard">
-    <div id="editBanner" class="edit-banner hidden">&#9999;&#65039; &#272;ang ch&#7881;nh s&#7917;a &mdash; b&#7845;m C&#7853;p nh&#7853;t &#273;&#7875; l&#432;u</div>
+    <div id="editBanner" class="edit-banner hidden">&#9999;&#65039; Đang chỉnh sửa &mdash; bấm Cập nhật để lưu</div>
 
     <label>Barcode *</label>
     <input id="barcode" type="text" inputmode="numeric" autocomplete="off"
-           placeholder="Barcode t&#7921; &#273;i&#7873;n ho&#7863;c nh&#7853;p tay">
+           placeholder="Barcode tự điền khi quét hoặc nhập tay">
 
-    <label>T&ecirc;n s&#7843;n ph&#7849;m</label>
-    <input id="pName" type="text" placeholder="T&ecirc;n s&#7843;n ph&#7849;m">
+    <label>Tên sản phẩm</label>
+    <input id="pName" type="text" placeholder="Tên sản phẩm (tự điền nếu đã từng lưu)" list="pNameSuggestions">
+    <datalist id="pNameSuggestions"></datalist>
 
     <div class="row">
       <div>
-        <label>S&#7889; l&#432;&#7907;ng *</label>
+        <label>Số lượng *</label>
         <input id="qty" type="number" inputmode="numeric" min="1" value="1">
       </div>
       <div>
-        <label>H&#7841;n s&#7917; d&#7909;ng *</label>
+        <label>Hạn sử dụng *</label>
         <input id="expiry" type="date">
       </div>
     </div>
 
-    <label>Ng&agrave;y s&#7843;n xu&#7845;t</label>
+    <label>Ngày sản xuất</label>
     <input id="mfg" type="date">
 
-    <label>&#7842;nh s&#7843;n ph&#7849;m</label>
+    <label>Ảnh sản phẩm</label>
     <input id="photoInput" type="file" accept="image/*" capture="environment">
     <div id="photoPreviewWrap" class="preview-wrap hidden">
-      <img id="photoPreview" class="preview-img" src="" alt="Xem tr&#432;&#7899;c &#7843;nh">
-      <button class="btn-remove-photo mt8" id="removePhotoBtn">&#128465; X&oacute;a &#7843;nh</button>
+      <img id="photoPreview" class="preview-img" src="" alt="Xem trước ảnh">
+      <button class="btn-remove-photo mt8" id="removePhotoBtn">&#128465; Xóa ảnh</button>
     </div>
 
-    <label>Ghi ch&uacute;</label>
-    <textarea id="note" rows="2" placeholder="Ghi ch&uacute; th&ecirc;m..."></textarea>
+    <label>Ghi chú</label>
+    <textarea id="note" rows="2" placeholder="Ghi chú thêm..."></textarea>
 
     <div class="actions mt12">
-      <button class="btn-green" id="saveBtn">&#128190; L&#432;u</button>
-      <button class="btn-orange" id="clearBtn">&#129529; X&oacute;a form</button>
+      <button class="btn-green" id="saveBtn">&#128190; Lưu</button>
+      <button class="btn-orange" id="clearBtn">&#129529; Xóa form</button>
     </div>
   </section>
 
-  <!-- List & Export -->
+  <!-- List & Export / Import -->
   <section class="card">
-    <label>&#128269; T&igrave;m ki&#7871;m</label>
-    <input id="search" type="text" placeholder="Barcode ho&#7863;c t&ecirc;n s&#7843;n ph&#7849;m...">
+    <label>&#128269; Tìm kiếm</label>
+    <input id="search" type="text" placeholder="Barcode hoặc tên sản phẩm...">
     <div id="list"></div>
     <div id="pagination"></div>
 
     <div class="row mt12">
-      <button class="btn-excel" id="xlsxBtn">&#128202; Xu&#7845;t Excel (c&oacute; &#7843;nh)</button>
-      <button class="btn-csv"   id="csvBtn">&#128196; Xu&#7845;t CSV</button>
+      <button class="btn-excel" id="xlsxBtn">&#128202; Xuất Excel (có ảnh)</button>
+      <button class="btn-green" id="importXlsxBtn">&#128229; Nhập Excel / CSV</button>
     </div>
     <div class="row mt8">
-      <button class="btn-backup"  id="jsonBtn">&#128190; Sao l&#432;u JSON</button>
-      <button class="btn-restore" id="restoreBtn">&#9851;&#65039; Kh&ocirc;i ph&#7909;c</button>
+      <button class="btn-csv"   id="csvBtn">&#128196; Xuất CSV</button>
+      <button class="btn-backup"  id="jsonBtn">&#128190; Sao lưu JSON</button>
     </div>
+    <div class="row mt8">
+      <button class="btn-restore" id="restoreBtn" style="grid-column: span 2;">&#9851;&#65039; Khôi phục JSON</button>
+    </div>
+    <input id="importXlsxInput" type="file" accept=".xlsx,.xls,.csv" class="hidden">
     <input id="restoreInput" type="file" accept=".json" class="hidden">
     <hr style="border:0;border-top:1.5px dashed #e4ecf2;margin:14px 0">
-    <button class="btn-danger" id="resetBtn">&#128465; X&oacute;a to&agrave;n b&#7897; d&#7919; li&#7879;u</button>
+    <button class="btn-danger" id="resetBtn">&#128465; Xóa toàn bộ dữ liệu</button>
   </section>
 
 </main>
@@ -215,10 +220,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
 // ════════════════════════════════════════════════════════════
 // 1. CONSTANTS & STATE
 // ════════════════════════════════════════════════════════════
-const LS_KEY    = "barcode_v3";
-const LS_KEY_V2 = "barcode_inventory_v2"; // legacy key for migration
+const LS_KEY         = "barcode_v3";
+const LS_KEY_V2      = "barcode_inventory_v2"; // legacy key for migration
+const LS_KEY_CATALOG = "barcode_catalog_v1";   // Barcode -> Product Name dictionary
 
 let records      = [];     // metadata only — no photo blobs here
+let catalog      = {};     // barcode -> product_name (O(1) in-memory lookup table)
 let html5QrCode  = null;   // scanner instance
 let isStarting   = false;  // race-condition guard for startScan()
 let photoData    = "";     // base64 of current form photo (or "" if none)
@@ -226,11 +233,9 @@ let photoRemoved = false;  // true when user explicitly clicked "Xoa anh"
 let editingId    = "";     // UUID of record being edited ("" = creating new)
 
 // ── Incremental stats cache — avoid full-scan on every render ──
-// Set dirty=true whenever records change; recalculated lazily in getStats()
 let _statsCache = { total: 0, qty: 0, expired: 0, dirty: true };
 
 // ── Filter result cache — avoid re-filtering on every keystroke ──
-// Set dirty=true when records change; q tracks last search string
 let _filterCache = { q: null, result: null, dirty: true };
 
 // ── RAF render dedup — collapse multiple rapid scheduleRender() calls ──
@@ -240,7 +245,7 @@ let _renderResetPage = false;
 // LRU photo cache — evicts oldest when > MAX_CACHE entries
 // Prevents RAM from growing unbounded with 1000+ photos
 const MAX_CACHE  = 80;
-const photoCache = new Map(); // id → dataUrl  (insertion-order = LRU)
+const photoCache = new Map(); // id -> dataUrl (insertion-order = LRU)
 
 function cacheSet(id, url) {
   if (photoCache.has(id)) photoCache.delete(id); // refresh position
@@ -257,46 +262,90 @@ function cacheGet(id) {
 }
 
 // Pagination state
-const PAGE_SIZE = 50;
-let currentPage   = 1;
-let filteredTotal = 0;
+const PAGE_SIZE     = 50;
+let currentPage     = 1;
+let filteredTotal   = 0;
 
 const $ = id => document.getElementById(id);
 
 
 // ════════════════════════════════════════════════════════════
-// 2. INDEXEDDB — photo storage (keeps localStorage lean)
+// 2. INDEXEDDB — stores all photo blobs
 // ════════════════════════════════════════════════════════════
-let _db = null;
-const dbReady = new Promise((resolve, reject) => {
-  const req = indexedDB.open("barcode_photos_v1", 1);
-  req.onupgradeneeded = ev => ev.target.result.createObjectStore("photos");
-  req.onsuccess = ev => { _db = ev.target.result; resolve(_db); };
-  req.onerror   = () => reject(req.error);
-});
+const IDB_NAME    = "barcode_photos_v3";
+const IDB_STORE   = "photos";
+const IDB_VERSION = 1;
 
-function idbOp(mode, fn) {
-  return dbReady.then(db => new Promise((res, rej) => {
-    const tx  = db.transaction("photos", mode);
-    const req = fn(tx.objectStore("photos"));
-    req.onsuccess = () => res(req.result);
-    req.onerror   = () => rej(req.error);
-  }));
+let _dbPromise = null;
+
+function getDB() {
+  if (_dbPromise) return _dbPromise;
+  _dbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(IDB_STORE)) {
+        db.createObjectStore(IDB_STORE, { keyPath: "id" });
+      }
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror   = e => reject(e.target.error);
+  });
+  return _dbPromise;
 }
 
-const savePhotoDB = (id, url) => idbOp("readwrite", s => s.put(url, id));
-const getPhotoDB  = id        => idbOp("readonly",  s => s.get(id));
-const delPhotoDB  = id        => idbOp("readwrite", s => s.delete(id));
+async function idbOp(mode, fn) {
+  const db = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx    = db.transaction(IDB_STORE, mode);
+    const store = tx.objectStore(IDB_STORE);
+    let req;
+    try { req = fn(store); } catch(err) { reject(err); return; }
+    tx.oncomplete = () => resolve(req ? req.result : undefined);
+    tx.onerror    = () => reject(tx.error);
+    tx.onabort    = () => reject(tx.error);
+  });
+}
 
-// Fetch multiple photos in PARALLEL (not sequential await-in-loop)
+function savePhotoDB(id, dataUrl) {
+  return idbOp("readwrite", s => s.put({ id, dataUrl }));
+}
+
+function getPhotoDB(id) {
+  return idbOp("readonly", s => s.get(id)).then(row => row ? row.dataUrl : null);
+}
+
+function delPhotoDB(id) {
+  return idbOp("readwrite", s => s.delete(id));
+}
+
+// Parallel fetch for multiple photos with cache checking
 async function fetchPhotos(ids) {
-  const result = {};
-  await Promise.all(ids.map(async id => {
+  const result  = {};
+  const missing = [];
+
+  for (const id of ids) {
     const cached = cacheGet(id);
-    if (cached) { result[id] = cached; return; }
-    const url = await getPhotoDB(id);
-    if (url) { cacheSet(id, url); result[id] = url; }
-  }));
+    if (cached !== undefined) {
+      result[id] = cached;
+    } else {
+      missing.push(id);
+    }
+  }
+
+  if (missing.length) {
+    const loaded = await Promise.all(
+      missing.map(id => getPhotoDB(id).catch(() => null))
+    );
+    for (let i = 0; i < missing.length; i++) {
+      const url = loaded[i];
+      if (url) {
+        cacheSet(missing[i], url);
+        result[missing[i]] = url;
+      }
+    }
+  }
+
   return result;
 }
 
@@ -320,7 +369,6 @@ function loadRecords() {
 }
 
 // Defer localStorage write off the critical render path via microtask
-// Prevents JSON.stringify(1000 records) from blocking the UI thread
 let _storePending = false;
 function storeRecords() {
   if (_storePending) return;
@@ -328,8 +376,64 @@ function storeRecords() {
   queueMicrotask(() => {
     _storePending = false;
     try { localStorage.setItem(LS_KEY, JSON.stringify(records)); }
-    catch(e) { alert("Loi luu du lieu: " + e.message); }
+    catch(e) { alert("Lỗi lưu dữ liệu: " + e.message); }
   });
+}
+
+
+// ════════════════════════════════════════════════════════════
+// 3.5. PRODUCT CATALOG — auto-remembers barcode -> product name
+// ════════════════════════════════════════════════════════════
+function loadCatalog() {
+  try { catalog = JSON.parse(localStorage.getItem(LS_KEY_CATALOG) || "{}"); }
+  catch { catalog = {}; }
+
+  // Sync catalog from existing records
+  let updated = false;
+  for (const r of records) {
+    if (r.barcode && r.name && !catalog[r.barcode]) {
+      catalog[r.barcode] = r.name;
+      updated = true;
+    }
+  }
+  if (updated) storeCatalog();
+  updateSuggestions();
+}
+
+let _catalogStorePending = false;
+function storeCatalog() {
+  if (_catalogStorePending) return;
+  _catalogStorePending = true;
+  queueMicrotask(() => {
+    _catalogStorePending = false;
+    try { localStorage.setItem(LS_KEY_CATALOG, JSON.stringify(catalog)); }
+    catch (e) { console.warn("Lỗi lưu danh mục tên sản phẩm:", e); }
+  });
+}
+
+function saveCatalogItem(barcode, name) {
+  const b = (barcode || "").trim();
+  const n = (name || "").trim();
+  if (!b || !n) return;
+  if (catalog[b] !== n) {
+    catalog[b] = n;
+    storeCatalog();
+    updateSuggestions();
+  }
+}
+
+function lookupCatalog(barcode) {
+  const b = (barcode || "").trim();
+  if (!b) return "";
+  return catalog[b] || "";
+}
+
+function updateSuggestions() {
+  const dl = $("pNameSuggestions");
+  if (!dl) return;
+  // Keep DOM lightweight: max 100 unique product names in datalist
+  const unique = Array.from(new Set(Object.values(catalog))).slice(0, 100);
+  dl.innerHTML = unique.map(n => `<option value="${esc(n)}"></option>`).join("");
 }
 
 
@@ -342,7 +446,6 @@ function invalidateAll() {
 }
 
 function invalidateFilter() {
-  // Called on search input — stats don't need recalculation
   _filterCache.dirty = true;
 }
 
@@ -396,11 +499,11 @@ function showMsg(msg, ok = true) {
 }
 
 function stat(r) {
-  if (!r.expiry) return ["CON HAN", "ok"];
+  if (!r.expiry) return ["CÒN HẠN", "ok"];
   const days = Math.ceil((new Date(r.expiry + "T23:59:59") - new Date()) / 86400000);
-  if (days < 0)  return ["DA HET HAN", "expired"];
-  if (days <= 7) return ["SAP HET HAN", "soon"];
-  return ["CON HAN", "ok"];
+  if (days < 0)  return ["ĐÃ HẾT HẠN", "expired"];
+  if (days <= 7) return ["SẮP HẾT HẠN", "soon"];
+  return ["CÒN HẠN", "ok"];
 }
 
 function debounce(fn, ms) {
@@ -433,7 +536,6 @@ function download(blob, name) {
   a.href     = URL.createObjectURL(blob);
   a.download = name;
   a.click();
-  // Revoke after click event completes
   requestAnimationFrame(() => URL.revokeObjectURL(a.href));
 }
 
@@ -445,12 +547,9 @@ function fmtDate() {
 // ════════════════════════════════════════════════════════════
 // 6. RENDER — cached stats+filter, paginated, RAF-deduped
 // ════════════════════════════════════════════════════════════
-
-// scheduleRender() collapses multiple rapid calls into ONE requestAnimationFrame.
-// Call this from event handlers; use render() directly only when you need to await.
 function scheduleRender(resetPage = false) {
   if (resetPage) _renderResetPage = true;
-  if (_renderPending) return;   // already queued — flag above is enough
+  if (_renderPending) return;
   _renderPending = true;
   requestAnimationFrame(() => {
     _renderPending    = false;
@@ -461,13 +560,13 @@ function scheduleRender(resetPage = false) {
 }
 
 async function _doRender(resetPage = false) {
-  // ── Stats (cached — O(n) only when dirty) ──────────────
+  // Stats (cached)
   const s = getStats();
   $("totalRows").textContent    = s.total;
   $("totalQty").textContent     = s.qty;
   $("expiredCount").textContent = s.expired;
 
-  // ── Filter (cached — only recomputes when query/data changed) ──
+  // Filter (cached)
   const q        = ($("search").value || "").toLowerCase();
   const filtered = getFiltered(q);
 
@@ -475,97 +574,89 @@ async function _doRender(resetPage = false) {
 
   if (!filteredTotal) {
     $("list").innerHTML = `<div class="muted" style="padding:14px 0 4px;text-align:center">
-      Chua co du lieu. Quet hoac nhap barcode de bat dau.</div>`;
+      Chưa có dữ liệu. Quét hoặc nhập barcode để bắt đầu.</div>`;
     renderPagination(0);
     return;
   }
 
-  // Reset to page 1 on new search or data change
   if (resetPage) currentPage = 1;
   const totalPages = Math.ceil(filteredTotal / PAGE_SIZE);
   if (currentPage > totalPages) currentPage = totalPages;
 
-  // Slice current page (max PAGE_SIZE items, not all 1000+)
   const start     = (currentPage - 1) * PAGE_SIZE;
   const pageItems = filtered.slice(start, start + PAGE_SIZE);
 
-  // Build full HTML string first, then ONE innerHTML assignment (one reflow)
+  // Single DOM write (one reflow)
   const parts = new Array(pageItems.length);
   for (let i = 0; i < pageItems.length; i++) {
     const r      = pageItems[i];
     const st     = stat(r);
     const safeId = esc(r.id);
     parts[i] = `<div class="item">
-      <strong>${esc(r.name || "Chua dat ten")}</strong>
+      <strong>${esc(r.name || "Chưa đặt tên")}</strong>
       <div class="muted">&#128278; <b>${esc(r.barcode)}</b> &nbsp;&middot;&nbsp; SL: <b>${esc(r.qty)}</b> &nbsp;&middot;&nbsp; HSD: ${esc(r.expiry || "&#8212;")}</div>
       ${r.mfg  ? `<div class="muted">&#127981; NSX: ${esc(r.mfg)}</div>` : ""}
       ${r.note ? `<div class="muted">&#128221; ${esc(r.note)}</div>`     : ""}
       <span class="badge ${st[1]}">${st[0]}</span>
-      ${r.hasPhoto ? `<img id="img_${safeId}" class="photo-thumb" src="" alt="anh" loading="lazy" decoding="async">` : ""}
+      ${r.hasPhoto ? `<img id="img_${safeId}" class="photo-thumb" src="" alt="ảnh" loading="lazy" decoding="async">` : ""}
       <div class="actions" style="margin-top:9px">
-        <button class="btn-gray" onclick="editR('${safeId}')">&#9999;&#65039; Sua</button>
-        <button class="btn-gray" onclick="delR('${safeId}')">&#128465; Xoa</button>
+        <button class="btn-gray" onclick="editR('${safeId}')">&#9999;&#65039; Sửa</button>
+        <button class="btn-gray" onclick="delR('${safeId}')">&#128465; Xóa</button>
       </div>
     </div>`;
   }
-  $("list").innerHTML = parts.join(""); // single DOM write — one reflow
+  $("list").innerHTML = parts.join("");
 
   renderPagination(totalPages);
 
-  // Lazy-load photos for this page only (max PAGE_SIZE, not 1000+)
+  // Lazy-load photos for current page only
   const withPhotos = pageItems.filter(r => r.hasPhoto);
   if (withPhotos.length) {
-    const photos = await fetchPhotos(withPhotos.map(r => r.id)); // parallel IDB reads
-    // Batch DOM photo writes in one RAF after async fetch — no layout thrash
+    const photos = await fetchPhotos(withPhotos.map(r => r.id));
     requestAnimationFrame(() => {
-      for (const [id, url] of Object.entries(photos)) {
-        const el = document.getElementById("img_" + id);
-        if (el) el.src = url;
+      for (const r of withPhotos) {
+        const el = document.getElementById("img_" + r.id);
+        if (el && photos[r.id]) el.src = photos[r.id];
       }
     });
   }
 }
 
-// Public alias — kept for backward compat (called from goPage / init / save)
 async function render(resetPage = false) {
   return _doRender(resetPage);
 }
 
 function renderPagination(totalPages) {
   const el = $("pagination");
-  if (!el) return;
   if (totalPages <= 1) { el.innerHTML = ""; return; }
 
-  const showing = Math.min(currentPage * PAGE_SIZE, filteredTotal);
-  const from    = (currentPage - 1) * PAGE_SIZE + 1;
+  let h = `<div class="pagination">
+    <button class="page-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? "disabled" : ""}>&laquo;</button>`;
 
-  // Show max 5 page numbers around current
-  const pages = [];
-  const delta = 2;
-  for (let p = 1; p <= totalPages; p++) {
-    if (p === 1 || p === totalPages || (p >= currentPage - delta && p <= currentPage + delta)) {
-      pages.push(p);
-    }
-  }
-  const withGaps = [];
-  let prev = 0;
-  for (const p of pages) {
-    if (prev && p - prev > 1) withGaps.push("...");
-    withGaps.push(p);
-    prev = p;
+  const maxVisible = 5;
+  let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+  let end   = Math.min(totalPages, start + maxVisible - 1);
+  if (end - start < maxVisible - 1) start = Math.max(1, end - maxVisible + 1);
+
+  if (start > 1) {
+    h += `<button class="page-btn" onclick="goPage(1)">1</button>`;
+    if (start > 2) h += `<span class="page-info">&hellip;</span>`;
   }
 
-  el.innerHTML = `
-    <div class="pagination">
-      <button class="pag-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? "disabled" : ""}>&#9664;</button>
-      ${withGaps.map(p => p === "..."
-        ? `<span style="color:#aaa;padding:0 2px">&#8230;</span>`
-        : `<button class="pag-btn ${p === currentPage ? "active" : ""}" onclick="goPage(${p})">${p}</button>`
-      ).join("")}
-      <button class="pag-btn" onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? "disabled" : ""}>&#9654;</button>
-    </div>
-    <div class="pag-info">${from}&ndash;${showing} / ${filteredTotal} ban ghi &nbsp;&middot;&nbsp; Trang ${currentPage}/${totalPages}</div>
-  `;
+  for (let p = start; p <= end; p++) {
+    h += `<button class="page-btn ${p === currentPage ? "active" : ""}" onclick="goPage(${p})">${p}</button>`;
+  }
+
+  if (end < totalPages) {
+    if (end < totalPages - 1) h += `<span class="page-info">&hellip;</span>`;
+    h += `<button class="page-btn" onclick="goPage(${totalPages})">${totalPages}</button>`;
+  }
+
+  h += `<button class="page-btn" onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? "disabled" : ""}>&raquo;</button>
+    <span class="page-info">${currentPage}/${totalPages} (${filteredTotal} mục)</span>
+  </div>`;
+
+  el.innerHTML = h;
 }
 
 async function goPage(p) {
@@ -590,14 +681,13 @@ function clearForm() {
   $("photoPreview").src = "";
   $("photoPreviewWrap").classList.add("hidden");
   $("editBanner").classList.add("hidden");
-  $("saveBtn").textContent = "&#128190; Luu";
+  $("saveBtn").textContent = "&#128190; Lưu";
 }
 
 async function editR(id) {
   const r = records.find(x => x.id === id);
   if (!r) return;
 
-  // Populate form WITHOUT removing record from array
   editingId          = id;
   $("barcode").value = r.barcode;
   $("pName").value   = r.name    || "";
@@ -607,7 +697,7 @@ async function editR(id) {
   $("note").value    = r.note   || "";
 
   $("editBanner").classList.remove("hidden");
-  $("saveBtn").textContent = "&#9989; Cap nhat";
+  $("saveBtn").textContent = "&#9989; Cập nhật";
 
   photoData    = "";
   photoRemoved = false;
@@ -623,17 +713,17 @@ async function editR(id) {
   }
 
   scrollTo({ top: 0, behavior: "smooth" });
-  showMsg("Dang chinh sua: " + (r.name || r.barcode), true);
+  showMsg("Đang chỉnh sửa: " + (r.name || r.barcode), true);
 }
 
 async function delR(id) {
-  if (!confirm("Xoa ban ghi nay?")) return;
+  if (!confirm("Xóa bản ghi này?")) return;
   records = records.filter(r => r.id !== id);
   await delPhotoDB(id).catch(() => {});
   photoCache.delete(id);
   invalidateAll();
   storeRecords();
-  scheduleRender(); // RAF-deduped, non-blocking
+  scheduleRender();
 }
 
 
@@ -647,43 +737,40 @@ $("saveBtn").onclick = async () => {
   const mfg     = $("mfg").value;
 
   if (!barcode) {
-    showMsg("Nhap hoac quet Barcode truoc!", false);
+    showMsg("Nhập hoặc quét Barcode trước!", false);
     $("barcode").focus(); return;
   }
   if (!qty || qty < 1) {
-    showMsg("So luong phai lon hon 0!", false); return;
+    showMsg("Số lượng phải lớn hơn 0!", false); return;
   }
   if (!expiry) {
-    showMsg("Chon Han su dung!", false);
+    showMsg("Chọn Hạn sử dụng!", false);
     $("expiry").focus(); return;
   }
   if (mfg && expiry && mfg > expiry) {
-    showMsg("Ngay san xuat khong the sau Han su dung!", false); return;
+    showMsg("Ngày sản xuất không thể sau Hạn sử dụng!", false); return;
   }
 
   stopScan();
   const origLabel       = $("saveBtn").textContent;
   $("saveBtn").disabled = true;
-  $("saveBtn").innerHTML = '<span class="spinner"></span>Dang luu...';
+  $("saveBtn").innerHTML = '<span class="spinner"></span>Đang lưu...';
 
   try {
     const isEdit   = !!editingId;
     const id       = isEdit ? editingId : genId();
     const existing = isEdit ? records.find(r => r.id === editingId) : null;
 
-    // Determine photo state for this record
     let hasPhoto;
     if (photoRemoved) {
       hasPhoto = false;
       await delPhotoDB(id).catch(() => {});
       photoCache.delete(id);
     } else if (photoData) {
-      // Save photo (new upload or existing loaded into photoData)
       hasPhoto = true;
       await savePhotoDB(id, photoData);
-      cacheSet(id, photoData); // LRU cache
+      cacheSet(id, photoData);
     } else {
-      // No change to photo state
       hasPhoto = isEdit ? (existing?.hasPhoto || false) : false;
     }
 
@@ -706,21 +793,26 @@ $("saveBtn").onclick = async () => {
       records.push(rec);
     }
 
-    invalidateAll();    // mark both caches dirty
-    storeRecords();     // deferred via queueMicrotask — does not block paint
+    // Remember / update product name in catalog for future scans
+    if (barcode && rec.name) {
+      saveCatalogItem(barcode, rec.name);
+    }
+
+    invalidateAll();
+    storeRecords();
     clearForm();
     await render();
-    showMsg(isEdit ? "Cap nhat thanh cong!" : "Da luu! Bam quet de tiep tuc.", true);
+    showMsg(isEdit ? "Cập nhật thành công!" : "Đã lưu! Bấm quét để tiếp tục.", true);
   } catch(err) {
     console.error("Save error:", err);
-    showMsg("Loi khi luu: " + err.message, false);
+    showMsg("Lỗi khi lưu: " + err.message, false);
   } finally {
     $("saveBtn").disabled    = false;
     $("saveBtn").textContent = origLabel;
   }
 };
 
-$("clearBtn").onclick = () => { clearForm(); showMsg("Da xoa form."); };
+$("clearBtn").onclick = () => { clearForm(); showMsg("Đã xóa form."); };
 
 
 // ════════════════════════════════════════════════════════════
@@ -735,7 +827,7 @@ $("photoInput").onchange = async e => {
     $("photoPreview").src = photoData;
     $("photoPreviewWrap").classList.remove("hidden");
   } catch(err) {
-    showMsg("Loi xu ly anh: " + err.message, false);
+    showMsg("Lỗi xử lý ảnh: " + err.message, false);
   }
 };
 
@@ -749,19 +841,18 @@ $("removePhotoBtn").onclick = () => {
 
 
 // ════════════════════════════════════════════════════════════
-// 10. SCANNER — fixed lifecycle (no stale instance)
+// 10. SCANNER & AUTO-NAME FILL
 // ════════════════════════════════════════════════════════════
 async function startScan() {
-  if (isStarting) return; // race-condition guard
+  if (isStarting) return;
 
   isStarting = true;
   $("scanBtn").disabled = true;
   $("stopBtn").classList.remove("hidden");
   $("reader").classList.remove("hidden");
-  showMsg("Dang ket noi camera...");
+  showMsg("Đang kết nối camera...");
 
   try {
-    // Always create a fresh instance (old one may be in broken state)
     html5QrCode = new Html5Qrcode("reader");
 
     await html5QrCode.start(
@@ -773,21 +864,30 @@ async function startScan() {
       },
       decodedText => {
         $("barcode").value = decodedText;
-        showMsg("Da nhan: " + decodedText, true);
         navigator.vibrate?.(100);
         stopScan();
-        $("expiry").focus();
+
+        // Auto-lookup product name from catalog
+        const knownName = lookupCatalog(decodedText);
+        if (knownName) {
+          $("pName").value = knownName;
+          showMsg("✅ Đã nhận: " + decodedText + " (" + knownName + ")", true);
+          $("expiry").focus(); // Product name already known -> jump straight to expiry!
+        } else {
+          showMsg("✅ Đã nhận: " + decodedText + " (Sản phẩm mới)", true);
+          $("pName").focus();  // New product -> focus on name input
+        }
       },
-      () => {} // Per-frame errors — suppress (normal during scanning)
+      () => {}
     );
 
-    showMsg("Dua barcode vao khung ngam...");
+    showMsg("Đưa barcode vào khung ngắm...");
   } catch(err) {
     console.error("Camera error:", err);
-    showMsg("Khong the mo camera. Kiem tra quyen camera trong trinh duyet.", false);
+    showMsg("Không thể mở camera. Kiểm tra quyền camera trong trình duyệt.", false);
     await stopScan();
   } finally {
-    isStarting = false; // always release guard
+    isStarting = false;
   }
 }
 
@@ -796,12 +896,11 @@ async function stopScan() {
     if (html5QrCode) {
       if (html5QrCode.isScanning) await html5QrCode.stop();
       html5QrCode.clear?.();
-      html5QrCode = null; // reset so next scan gets fresh instance
+      html5QrCode = null;
     }
   } catch(e) {
     html5QrCode = null;
   } finally {
-    // Cleanup always runs, even if stop() throws
     $("reader").classList.add("hidden");
     $("stopBtn").classList.add("hidden");
     $("scanBtn").disabled = false;
@@ -812,10 +911,23 @@ $("scanBtn").onclick   = startScan;
 $("stopBtn").onclick   = stopScan;
 $("manualBtn").onclick = () => { stopScan(); $("barcode").focus(); };
 
-// Debounced search — 300 ms, only dirties filter cache (not stats)
+// Auto-fill product name when barcode is typed manually or entered via hardware scanner
+function handleBarcodeAutoFill() {
+  const code = ($("barcode").value || "").trim();
+  if (!code) return;
+  const knownName = lookupCatalog(code);
+  if (knownName && !$("pName").value.trim()) {
+    $("pName").value = knownName;
+    showMsg("💡 Tự điền tên: " + knownName, true);
+  }
+}
+$("barcode").addEventListener("input", debounce(handleBarcodeAutoFill, 250));
+$("barcode").addEventListener("change", handleBarcodeAutoFill);
+
+// Debounced search — 300 ms, only dirties filter cache
 $("search").oninput = debounce(() => {
   invalidateFilter();
-  scheduleRender(true); // reset to page 1, RAF-deduped
+  scheduleRender(true);
 }, 300);
 
 
@@ -824,8 +936,8 @@ $("search").oninput = debounce(() => {
 // ════════════════════════════════════════════════════════════
 $("csvBtn").onclick = () => {
   const headers = [
-    "Barcode","Ten san pham","So luong","Ngay san xuat",
-    "Han su dung","Trang thai","Ghi chu","Thoi gian tao"
+    "Barcode","Tên sản phẩm","Số lượng","Ngày sản xuất",
+    "Hạn sử dụng","Trạng thái","Ghi chú","Thời gian tạo"
   ];
   const rows = records.map(r => {
     const s = stat(r);
@@ -835,12 +947,12 @@ $("csvBtn").onclick = () => {
     .map(row => row.map(v => `"${String(v ?? "").replaceAll('"','""')}"`).join(","))
     .join("\n");
   download(new Blob([csv], { type: "text/csv;charset=utf-8" }), `barcode_${fmtDate()}.csv`);
-  showMsg("Xuat CSV thanh cong!", true);
+  showMsg("Xuất CSV thành công!", true);
 };
 
 
 // ════════════════════════════════════════════════════════════
-// 12. EXPORT XLSX with embedded photos  (ExcelJS, lazy-loaded)
+// 12. EXPORT XLSX with embedded photos (ExcelJS, lazy-loaded)
 // ════════════════════════════════════════════════════════════
 let _excelJSLoaded = false;
 function loadExcelJS() {
@@ -852,45 +964,43 @@ function loadExcelJS() {
     const s   = document.createElement("script");
     s.src     = "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js";
     s.onload  = () => { _excelJSLoaded = true; resolve(); };
-    s.onerror = () => reject(new Error("Khong tai duoc ExcelJS. Kiem tra ket noi mang."));
+    s.onerror = () => reject(new Error("Không tải được ExcelJS. Kiểm tra kết nối mạng."));
     document.head.appendChild(s);
   });
 }
 
 $("xlsxBtn").onclick = async () => {
-  if (!records.length) { showMsg("Chua co du lieu de xuat!", false); return; }
+  if (!records.length) { showMsg("Chưa có dữ liệu để xuất!", false); return; }
 
   $("xlsxBtn").disabled  = true;
-  $("xlsxBtn").innerHTML = '<span class="spinner"></span>Dang tai thu vien...';
+  $("xlsxBtn").innerHTML = '<span class="spinner"></span>Đang tải thư viện...';
 
   try {
     await loadExcelJS();
-    $("xlsxBtn").innerHTML = '<span class="spinner"></span>Dang tao file Excel...';
+    $("xlsxBtn").innerHTML = '<span class="spinner"></span>Đang tạo file Excel...';
 
     const wb = new ExcelJS.Workbook();
     wb.creator  = "Barcode Manager";
     wb.created  = new Date();
     wb.modified = new Date();
 
-    const ws = wb.addWorksheet("Du lieu Barcode", {
+    const ws = wb.addWorksheet("Dữ liệu Barcode", {
       views:     [{ state: "frozen", ySplit: 1 }],
       pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true }
     });
 
-    // ── Column definitions ───────────────────────────────
     ws.columns = [
       { header: "Barcode",       key: "barcode",  width: 22 },
-      { header: "Ten san pham",  key: "name",     width: 30 },
-      { header: "So luong",      key: "qty",      width: 12 },
-      { header: "Ngay san xuat", key: "mfg",      width: 16 },
-      { header: "Han su dung",   key: "expiry",   width: 16 },
-      { header: "Trang thai",    key: "status",   width: 16 },
-      { header: "Ghi chu",       key: "note",     width: 30 },
-      { header: "Thoi gian tao", key: "created",  width: 22 },
-      { header: "Anh san pham",  key: "photo",    width: 20 },
+      { header: "Tên sản phẩm",  key: "name",     width: 30 },
+      { header: "Số lượng",      key: "qty",      width: 12 },
+      { header: "Ngày sản xuất", key: "mfg",      width: 16 },
+      { header: "Hạn sử dụng",   key: "expiry",   width: 16 },
+      { header: "Trạng thái",    key: "status",   width: 16 },
+      { header: "Ghi chú",       key: "note",     width: 30 },
+      { header: "Thời gian tạo", key: "created",  width: 22 },
+      { header: "Ảnh sản phẩm",  key: "photo",    width: 20 },
     ];
 
-    // ── Header row style ─────────────────────────────────
     const hdrRow = ws.getRow(1);
     hdrRow.height = 30;
     hdrRow.eachCell(cell => {
@@ -900,17 +1010,15 @@ $("xlsxBtn").onclick = async () => {
       cell.border    = { bottom: { style: "medium", color: { argb: "FF2E75B6" } } };
     });
 
-    // ── Fetch all photos in parallel ─────────────────────
     const withPhotos = records.filter(r => r.hasPhoto);
     const photos     = withPhotos.length
       ? await fetchPhotos(withPhotos.map(r => r.id)) : {};
 
-    // ── Data rows ────────────────────────────────────────
     for (let i = 0; i < records.length; i++) {
       const r       = records[i];
       const s       = stat(r);
       const photo   = photos[r.id] || null;
-      const excelRN = i + 2; // Excel row number (header = row 1)
+      const excelRN = i + 2;
 
       const row = ws.addRow({
         barcode: r.barcode,
@@ -920,14 +1028,12 @@ $("xlsxBtn").onclick = async () => {
         expiry:  r.expiry || "",
         status:  s[0],
         note:    r.note   || "",
-        created: r.createdAt
-          ? new Date(r.createdAt).toLocaleString("vi-VN") : "",
-        photo:   "" // image embedded via ws.addImage; cell left empty
+        created: r.createdAt ? new Date(r.createdAt).toLocaleString("vi-VN") : "",
+        photo:   ""
       });
 
       row.height = photo ? 75 : 22;
 
-      // Base cell styles for this row
       row.eachCell({ includeEmpty: true }, cell => {
         cell.alignment = { vertical: "middle", wrapText: true };
         cell.font      = { name: "Calibri", size: 10 };
@@ -937,46 +1043,43 @@ $("xlsxBtn").onclick = async () => {
           bottom: { style: "thin", color: { argb: "FFD0DCE8" } },
           right:  { style: "thin", color: { argb: "FFD0DCE8" } }
         };
-        // Alternate row shading
         if (i % 2 === 1) {
           cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF3F7FB" } };
         }
       });
 
-      // Qty — center align
       row.getCell(3).alignment = { vertical: "middle", horizontal: "center" };
 
-      // Status cell — colour-coded by expiry state
       const statusCell = row.getCell(6);
       statusCell.alignment = { vertical: "middle", horizontal: "center" };
       statusCell.font      = { name: "Calibri", size: 10, bold: true };
-      if (s[1] === "expired") {
-        statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFDE0DF" } };
-        statusCell.font = { ...statusCell.font, color: { argb: "FF7A1010" } };
+      if (s[1] === "ok") {
+        statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE2F0D9" } };
+        statusCell.font = { name: "Calibri", size: 10, bold: true, color: { argb: "FF27582A" } };
       } else if (s[1] === "soon") {
         statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFCE4D6" } };
-        statusCell.font = { ...statusCell.font, color: { argb: "FF7A3010" } };
+        statusCell.font = { name: "Calibri", size: 10, bold: true, color: { argb: "FF7A3010" } };
       } else {
-        statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE2F0D9" } };
-        statusCell.font = { ...statusCell.font, color: { argb: "FF2A5219" } };
+        statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFDE0DF" } };
+        statusCell.font = { name: "Calibri", size: 10, bold: true, color: { argb: "FF7A1010" } };
       }
 
-      // ── Embed photo in column I (index 8, 0-based) ───
       if (photo) {
-        const ext   = photo.startsWith("data:image/png") ? "png" : "jpeg";
-        const b64   = photo.split(",")[1];
-        const imgId = wb.addImage({ base64: b64, extension: ext });
-        // ExcelJS image coords: tl/br row/col are 0-indexed
-        // row 0 = header; first data row = index (excelRN - 1)
-        ws.addImage(imgId, {
-          tl:     { col: 8, row: excelRN - 1 },
-          br:     { col: 9, row: excelRN },
-          editAs: "oneCell"
-        });
+        try {
+          const imageId = wb.addImage({
+            base64: photo,
+            extension: "jpeg"
+          });
+          ws.addImage(imageId, {
+            tl: { col: 8.1, row: excelRN - 0.9 },
+            ext: { width: 68, height: 68 }
+          });
+        } catch(imgErr) {
+          console.warn("Could not embed image for row " + excelRN, imgErr);
+        }
       }
     }
 
-    // ── Write buffer & trigger download ──────────────────
     const buffer = await wb.xlsx.writeBuffer();
     download(
       new Blob([buffer], {
@@ -984,25 +1087,349 @@ $("xlsxBtn").onclick = async () => {
       }),
       `barcode_${fmtDate()}.xlsx`
     );
-    showMsg("Xuat Excel thanh cong!", true);
+    showMsg("Xuất Excel thành công!", true);
 
   } catch(err) {
     console.error("XLSX export error:", err);
-    showMsg("Loi xuat Excel: " + err.message, false);
+    showMsg("Lỗi xuất Excel: " + err.message, false);
   } finally {
     $("xlsxBtn").disabled    = false;
-    $("xlsxBtn").textContent = "&#128202; Xuat Excel (co anh)";
+    $("xlsxBtn").textContent = "&#128202; Xuất Excel (có ảnh)";
   }
 };
 
 
 // ════════════════════════════════════════════════════════════
-// 13. BACKUP / RESTORE JSON
-//     Backup includes photos so the .json is self-contained
+// 13. IMPORT EXCEL / CSV (Optimized, non-blocking chunking)
+// ════════════════════════════════════════════════════════════
+function parseExcelDate(val) {
+  if (!val) return "";
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    const y = val.getFullYear();
+    const m = String(val.getMonth() + 1).padStart(2, "0");
+    const d = String(val.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+  if (typeof val === "object" && val.text)   val = val.text;
+  if (typeof val === "object" && val.result) val = val.result;
+  const s = String(val).trim();
+  if (!s) return "";
+
+  // ISO YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+  // DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
+  const dmy = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+  if (dmy) {
+    return `${dmy[3]}-${dmy[2].padStart(2, "0")}-${dmy[1].padStart(2, "0")}`;
+  }
+
+  // YYYY/MM/DD
+  const ymd = s.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/);
+  if (ymd) {
+    return `${ymd[1]}-${ymd[2].padStart(2, "0")}-${ymd[3].padStart(2, "0")}`;
+  }
+
+  // Excel serial number date
+  const num = Number(s);
+  if (!isNaN(num) && num > 10000 && num < 90000) {
+    const date = new Date(Math.round((num - 25569) * 86400 * 1000));
+    if (!isNaN(date.getTime())) {
+      const y = date.getUTCFullYear();
+      const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+      const d = String(date.getUTCDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+  }
+  return "";
+}
+
+function getCellValue(cell) {
+  if (!cell || cell.value == null) return "";
+  const v = cell.value;
+  if (v instanceof Date) return v;
+  if (typeof v === "object") {
+    if (v.text !== undefined)   return v.text;
+    if (v.result !== undefined) return v.result;
+    if (Array.isArray(v.richText)) return v.richText.map(t => t.text || "").join("");
+  }
+  return String(v).trim();
+}
+
+function detectColumns(row) {
+  const map = { barcode: -1, name: -1, qty: -1, mfg: -1, expiry: -1, note: -1 };
+  row.eachCell((cell, colNumber) => {
+    const raw = String(cell.value?.text || cell.value || "").toLowerCase();
+    // Normalize: remove diacritics & spaces for flexible matching
+    const norm = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+
+    if (norm.includes("barcode") || norm.includes("mavach") || norm.includes("code") || norm === "ma") {
+      if (map.barcode === -1) map.barcode = colNumber;
+    } else if (norm.includes("tensanpham") || norm.includes("tensp") || norm.includes("product") || norm.includes("name") || norm === "ten") {
+      if (map.name === -1) map.name = colNumber;
+    } else if (norm.includes("soluong") || norm.includes("qty") || norm.includes("quantity") || norm === "sl") {
+      if (map.qty === -1) map.qty = colNumber;
+    } else if (norm.includes("sanxuat") || norm.includes("nsx") || norm.includes("mfg")) {
+      if (map.mfg === -1) map.mfg = colNumber;
+    } else if (norm.includes("hansudung") || norm.includes("handung") || norm.includes("hsd") || norm.includes("expiry") || norm.includes("exp")) {
+      if (map.expiry === -1) map.expiry = colNumber;
+    } else if (norm.includes("ghichu") || norm.includes("note") || norm.includes("mota")) {
+      if (map.note === -1) map.note = colNumber;
+    }
+  });
+  return map;
+}
+
+function parseCsvRows(text) {
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return [];
+
+  const parseLine = line => {
+    const row = [];
+    let inQuotes = false;
+    let cur = "";
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') {
+        if (inQuotes && line[i+1] === '"') { cur += '"'; i++; }
+        else inQuotes = !inQuotes;
+      } else if (c === ',' && !inQuotes) {
+        row.push(cur.trim()); cur = "";
+      } else {
+        cur += c;
+      }
+    }
+    row.push(cur.trim());
+    return row;
+  };
+
+  const headerRow = parseLine(lines[0]);
+  const map = { barcode: -1, name: -1, qty: -1, mfg: -1, expiry: -1, note: -1 };
+  headerRow.forEach((col, idx) => {
+    const norm = col.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+    if (norm.includes("barcode") || norm.includes("mavach") || norm.includes("code") || norm === "ma") {
+      if (map.barcode === -1) map.barcode = idx;
+    } else if (norm.includes("tensanpham") || norm.includes("tensp") || norm.includes("product") || norm.includes("name") || norm === "ten") {
+      if (map.name === -1) map.name = idx;
+    } else if (norm.includes("soluong") || norm.includes("qty") || norm.includes("quantity") || norm === "sl") {
+      if (map.qty === -1) map.qty = idx;
+    } else if (norm.includes("sanxuat") || norm.includes("nsx") || norm.includes("mfg")) {
+      if (map.mfg === -1) map.mfg = idx;
+    } else if (norm.includes("hansudung") || norm.includes("handung") || norm.includes("hsd") || norm.includes("expiry") || norm.includes("exp")) {
+      if (map.expiry === -1) map.expiry = idx;
+    } else if (norm.includes("ghichu") || norm.includes("note") || norm.includes("mota")) {
+      if (map.note === -1) map.note = idx;
+    }
+  });
+
+  if (map.barcode === -1) {
+    map.barcode = 0; map.name = 1; map.qty = 2; map.mfg = 3; map.expiry = 4; map.note = 6;
+  }
+
+  const result = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseLine(lines[i]);
+    const barcode = cols[map.barcode];
+    if (!barcode) continue;
+    result.push({
+      barcode: String(barcode).trim(),
+      name:    map.name !== -1 ? String(cols[map.name] || "").trim() : "",
+      qty:     map.qty !== -1 ? Math.max(1, parseInt(cols[map.qty]) || 1) : 1,
+      mfg:     map.mfg !== -1 ? parseExcelDate(cols[map.mfg]) : "",
+      expiry:  map.expiry !== -1 ? parseExcelDate(cols[map.expiry]) : "",
+      note:    map.note !== -1 ? String(cols[map.note] || "").trim() : "",
+      photo:   ""
+    });
+  }
+  return result;
+}
+
+$("importXlsxBtn").onclick = () => $("importXlsxInput").click();
+
+$("importXlsxInput").onchange = async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  $("importXlsxBtn").disabled  = true;
+  $("importXlsxBtn").innerHTML = '<span class="spinner"></span>Đang đọc file...';
+
+  try {
+    const isCsv = file.name.toLowerCase().endsWith(".csv");
+    let rowsData = [];
+
+    if (isCsv) {
+      const text = await file.text();
+      rowsData = parseCsvRows(text);
+    } else {
+      await loadExcelJS();
+      $("importXlsxBtn").innerHTML = '<span class="spinner"></span>Đang phân tích bảng tính...';
+
+      const buffer = await file.arrayBuffer();
+      const wb     = new ExcelJS.Workbook();
+      await wb.xlsx.load(buffer);
+
+      const ws = wb.worksheets[0];
+      if (!ws) throw new Error("File Excel không có trang tính (worksheet) nào!");
+
+      // Extract embedded images if available
+      const imageMap = {};
+      try {
+        const images = ws.getImages ? ws.getImages() : [];
+        for (const img of images) {
+          const media = wb.model.media && wb.model.media[img.imageId];
+          if (media) {
+            const rowIdx = Math.round(img.range?.tl?.row ?? img.range?.tl?.nativeRow ?? -1);
+            if (rowIdx >= 0) {
+              let b64 = "";
+              if (media.base64) {
+                b64 = `data:image/${media.extension || "jpeg"};base64,${media.base64}`;
+              } else if (media.buffer) {
+                const bytes = new Uint8Array(media.buffer);
+                let binary = "";
+                for (let b = 0; b < bytes.byteLength; b++) binary += String.fromCharCode(bytes[b]);
+                b64 = `data:image/${media.extension || "jpeg"};base64,${btoa(binary)}`;
+              }
+              if (b64) imageMap[rowIdx] = b64;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Lưu ý: Không đọc được ảnh từ Excel:", err);
+      }
+
+      // Detect header row
+      let headerRowIndex = 1;
+      let colMap = { barcode: -1, name: -1, qty: -1, mfg: -1, expiry: -1, note: -1 };
+
+      for (let r = 1; r <= Math.min(6, ws.rowCount); r++) {
+        const row = ws.getRow(r);
+        const map = detectColumns(row);
+        if (map.barcode !== -1 || map.name !== -1) {
+          colMap = map;
+          headerRowIndex = r;
+          break;
+        }
+      }
+
+      if (colMap.barcode === -1) {
+        colMap = { barcode: 1, name: 2, qty: 3, mfg: 4, expiry: 5, note: 6 };
+      }
+
+      for (let r = headerRowIndex + 1; r <= ws.rowCount; r++) {
+        const row = ws.getRow(r);
+        const barcodeVal = getCellValue(row.getCell(colMap.barcode));
+        if (!barcodeVal) continue;
+
+        const nameVal   = colMap.name !== -1 ? getCellValue(row.getCell(colMap.name)) : "";
+        const qtyVal    = colMap.qty !== -1 ? getCellValue(row.getCell(colMap.qty)) : 1;
+        const mfgVal    = colMap.mfg !== -1 ? parseExcelDate(row.getCell(colMap.mfg).value) : "";
+        const expiryVal = colMap.expiry !== -1 ? parseExcelDate(row.getCell(colMap.expiry).value) : "";
+        const noteVal   = colMap.note !== -1 ? getCellValue(row.getCell(colMap.note)) : "";
+
+        // Check image in row
+        const photo = imageMap[r - 1] || imageMap[r] || "";
+
+        rowsData.push({
+          barcode: String(barcodeVal).trim(),
+          name:    String(nameVal || "").trim(),
+          qty:     Math.max(1, parseInt(qtyVal) || 1),
+          mfg:     mfgVal,
+          expiry:  expiryVal,
+          note:    String(noteVal || "").trim(),
+          photo
+        });
+      }
+    }
+
+    if (!rowsData.length) {
+      showMsg("Không tìm thấy dữ liệu barcode hợp lệ trong file!", false);
+      return;
+    }
+
+    const action = confirm(
+      `Tìm thấy ${rowsData.length} sản phẩm từ file!\n\n` +
+      `• Bấm [OK] để THÊM TIẾP vào danh sách hiện tại (${records.length} mục).\n` +
+      `• Bấm [Cancel] để hủy thao tác.`
+    );
+    if (!action) return;
+
+    // Non-blocking chunked import to keep UI 100% responsive
+    $("importXlsxBtn").innerHTML = `<span class="spinner"></span> Đang nạp 0/${rowsData.length}...`;
+    const newRecords   = [];
+    const photoEntries = [];
+
+    const CHUNK_SIZE = 120;
+    for (let i = 0; i < rowsData.length; i++) {
+      const item = rowsData[i];
+      const id   = genId();
+
+      // If name missing in file, lookup in catalog!
+      let pName = item.name;
+      if (!pName && catalog[item.barcode]) {
+        pName = catalog[item.barcode];
+      } else if (pName && item.barcode) {
+        // Learn product name into catalog
+        catalog[item.barcode] = pName;
+      }
+
+      if (item.photo) {
+        photoEntries.push([id, item.photo]);
+        cacheSet(id, item.photo);
+      }
+
+      newRecords.push({
+        id,
+        barcode:   item.barcode,
+        name:      pName,
+        qty:       item.qty,
+        mfg:       item.mfg,
+        expiry:    item.expiry,
+        note:      item.note,
+        hasPhoto:  !!item.photo,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+
+      // Yield every CHUNK_SIZE items
+      if (i % CHUNK_SIZE === 0 && i > 0) {
+        $("importXlsxBtn").innerHTML = `<span class="spinner"></span> Đang nạp ${i}/${rowsData.length}...`;
+        await new Promise(r => setTimeout(r, 0));
+      }
+    }
+
+    // Save photos in parallel batches
+    if (photoEntries.length) {
+      $("importXlsxBtn").innerHTML = `<span class="spinner"></span> Đang lưu ảnh...`;
+      await batchSavePhotos(photoEntries);
+    }
+
+    records = records.concat(newRecords);
+    invalidateAll();
+    storeRecords();
+    storeCatalog();
+    updateSuggestions();
+
+    await render();
+    showMsg(`✅ Đã nhập thành công ${newRecords.length} sản phẩm và cập nhật danh mục tên!`, true);
+
+  } catch(err) {
+    console.error("Import error:", err);
+    showMsg("Lỗi khi nhập file: " + err.message, false);
+  } finally {
+    $("importXlsxInput").value = "";
+    $("importXlsxBtn").disabled = false;
+    $("importXlsxBtn").textContent = "📥 Nhập Excel / CSV";
+  }
+};
+
+
+// ════════════════════════════════════════════════════════════
+// 14. BACKUP / RESTORE JSON
 // ════════════════════════════════════════════════════════════
 $("jsonBtn").onclick = async () => {
   $("jsonBtn").disabled  = true;
-  $("jsonBtn").innerHTML = '<span class="spinner spinner-dark"></span>Dang sao luu...';
+  $("jsonBtn").innerHTML = '<span class="spinner spinner-dark"></span>Đang sao lưu...';
   try {
     const withPhotos = records.filter(r => r.hasPhoto);
     const photos     = withPhotos.length
@@ -1011,18 +1438,19 @@ $("jsonBtn").onclick = async () => {
       version:    3,
       exportedAt: new Date().toISOString(),
       records,
-      photos // base64 photos included for portability
+      catalog,
+      photos
     };
     download(
       new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }),
       `barcode_backup_${fmtDate()}.json`
     );
-    showMsg("Sao luu thanh cong!", true);
+    showMsg("Sao lưu thành công!", true);
   } catch(err) {
-    showMsg("Loi sao luu: " + err.message, false);
+    showMsg("Lỗi sao lưu: " + err.message, false);
   } finally {
     $("jsonBtn").disabled    = false;
-    $("jsonBtn").textContent = "&#128190; Sao luu JSON";
+    $("jsonBtn").textContent = "&#128190; Sao lưu JSON";
   }
 };
 
@@ -1033,25 +1461,24 @@ $("restoreInput").onchange = async e => {
   if (!file) return;
 
   if (!confirm(
-    "Khoi phuc se GHI DE toan bo " + records.length + " ban ghi hien tai.\nBan chac chan muon tiep tuc?"
+    "Khôi phục sẽ GHI ĐÈ toàn bộ " + records.length + " bản ghi hiện tại.\nBạn chắc chắn muốn tiếp tục?"
   )) { e.target.value = ""; return; }
 
   $("restoreBtn").disabled  = true;
-  $("restoreBtn").innerHTML = '<span class="spinner spinner-dark"></span>Dang khoi phuc...';
+  $("restoreBtn").innerHTML = '<span class="spinner spinner-dark"></span>Đang khôi phục...';
 
   try {
     const text = await file.text();
     const data = JSON.parse(text);
 
     if (Array.isArray(data)) {
-      // Legacy v1/v2 — photos were stored directly on records
       const migrated     = [];
       const photoEntries = [];
       for (const r of data) {
         const id = r.id || genId();
         if (r.photo) {
           photoEntries.push([id, r.photo]);
-          cacheSet(id, r.photo); // populate cache immediately
+          cacheSet(id, r.photo);
         }
         migrated.push({
           id,
@@ -1066,79 +1493,87 @@ $("restoreInput").onchange = async e => {
           updatedAt: new Date().toISOString()
         });
       }
-      // Write photos in parallel batches of 20 — NOT sequential await-in-loop
       await batchSavePhotos(photoEntries);
       records = migrated;
     } else {
-      // v3 format
       records = data.records || [];
+      if (data.catalog) {
+        catalog = Object.assign({}, catalog, data.catalog);
+        storeCatalog();
+      }
       const photos       = data.photos || {};
       const photoEntries = Object.entries(photos);
-      // Populate cache immediately → render shows photos without waiting for IDB
       for (const [id, url] of photoEntries) cacheSet(id, url);
-      // Write to IDB in the background (non-blocking for UI)
       batchSavePhotos(photoEntries).catch(console.error);
     }
+
+    // Sync catalog from records
+    for (const r of records) {
+      if (r.barcode && r.name) catalog[r.barcode] = r.name;
+    }
+    storeCatalog();
+    updateSuggestions();
 
     invalidateAll();
     storeRecords();
     await render();
-    showMsg("Khoi phuc thanh cong! " + records.length + " ban ghi.", true);
+    showMsg("Khôi phục thành công! " + records.length + " bản ghi.", true);
   } catch(err) {
-    showMsg("File khong hop le: " + err.message, false);
+    showMsg("File không hợp lệ: " + err.message, false);
   } finally {
     e.target.value = "";
     $("restoreBtn").disabled    = false;
-    $("restoreBtn").textContent = "&#9851;&#65039; Khoi phuc";
+    $("restoreBtn").textContent = "&#9851;&#65039; Khôi phục JSON";
   }
 };
 
 
 // ════════════════════════════════════════════════════════════
-// 14. RESET ALL DATA
+// 15. RESET ALL DATA
 // ════════════════════════════════════════════════════════════
 function clearAllPhotosDB() {
   return idbOp("readwrite", s => s.clear());
 }
 
 $("resetBtn").onclick = async () => {
-  if (!records.length) {
-    showMsg("Khong co du lieu de xoa.", false); return;
+  if (!records.length && !Object.keys(catalog).length) {
+    showMsg("Không có dữ liệu để xóa.", false); return;
   }
-  // Double-confirm to prevent accidents
-  if (!confirm("XOA TOAN BO " + records.length + " ban ghi va tat ca anh?\n\nHanh dong nay KHONG THE hoan tac!")) return;
-  if (!confirm("Xac nhan lan 2: Toan bo du lieu se bi xoa vinh vien. Tiep tuc?")) return;
+  if (!confirm("XÓA TOÀN BỘ " + records.length + " bản ghi, tất cả ảnh và danh mục sản phẩm?\n\nHành động này KHÔNG THỂ hoàn tác!")) return;
+  if (!confirm("Xác nhận lần 2: Toàn bộ dữ liệu sẽ bị xóa vĩnh viễn. Tiếp tục?")) return;
 
   $("resetBtn").disabled  = true;
-  $("resetBtn").innerHTML = '<span class="spinner"></span>Dang xoa...';
+  $("resetBtn").innerHTML = '<span class="spinner"></span>Đang xóa...';
 
   try {
     records = [];
+    catalog = {};
     localStorage.removeItem(LS_KEY);
+    localStorage.removeItem(LS_KEY_CATALOG);
     await clearAllPhotosDB();
     photoCache.clear();
     invalidateAll();
+    updateSuggestions();
     clearForm();
     await render();
-    showMsg("Da xoa toan bo du lieu!", true);
+    showMsg("Đã xóa toàn bộ dữ liệu!", true);
   } catch(err) {
-    showMsg("Loi reset: " + err.message, false);
+    showMsg("Lỗi reset: " + err.message, false);
   } finally {
     $("resetBtn").disabled    = false;
-    $("resetBtn").textContent = "&#128465; Xoa toan bo du lieu";
+    $("resetBtn").textContent = "&#128465; Xóa toàn bộ dữ liệu";
   }
 };
 
 
 // ════════════════════════════════════════════════════════════
-// 15. INIT — auto-migrates v2 localStorage → v3 (IndexedDB)
+// 16. INIT — auto-migrates v2 -> v3, loads records & catalog
 // ════════════════════════════════════════════════════════════
 async function init() {
   const oldRaw = localStorage.getItem(LS_KEY_V2);
   const newRaw = localStorage.getItem(LS_KEY);
 
   if (oldRaw && !newRaw) {
-    // One-time migration from v2
     try {
       const oldRecs      = JSON.parse(oldRaw);
       const migrated     = [];
@@ -1162,11 +1597,11 @@ async function init() {
           updatedAt: new Date().toISOString()
         });
       }
-      await batchSavePhotos(photoEntries); // parallel batch write
+      await batchSavePhotos(photoEntries);
       records = migrated;
       invalidateAll();
       storeRecords();
-      showMsg("Da chuyen " + records.length + " ban ghi tu phien ban cu!", true);
+      showMsg("Đã chuyển " + records.length + " bản ghi từ phiên bản cũ!", true);
     } catch(e) {
       console.error("Migration failed:", e);
       loadRecords();
@@ -1175,6 +1610,7 @@ async function init() {
     loadRecords();
   }
 
+  loadCatalog();
   await render();
 }
 
